@@ -1,10 +1,27 @@
-export default function EventTypesPage() {
-  return (
-    <div>
-      <h1 className="text-xl font-semibold tracking-tight">事件类型</h1>
-      <p className="mt-1 text-[13px] text-ink-secondary">
-        事件类型页在 T3.2 实现。
-      </p>
-    </div>
-  )
+import { redirect } from 'next/navigation'
+import { EventTypeManager } from '@/components/dashboard/EventTypeManager'
+import { auth } from '@/lib/auth'
+import { getEventTypesByUser } from '@/lib/queries/event-types'
+
+export const dynamic = 'force-dynamic'
+export const metadata = { title: '事件类型' }
+
+export default async function EventTypesPage() {
+  const session = await auth()
+  if (!session?.user) redirect('/login')
+
+  const rows = await getEventTypesByUser(session.user.id)
+
+  const items = rows.map((row) => ({
+    id: row.id,
+    title: row.title,
+    slug: row.slug,
+    description: row.description,
+    duration: row.duration,
+    bufferBefore: row.bufferBefore,
+    bufferAfter: row.bufferAfter,
+    isActive: row.isActive,
+  }))
+
+  return <EventTypeManager items={items} />
 }

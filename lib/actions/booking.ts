@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/db'
+import { sendBookingEmails } from '@/lib/email/send'
 import {
   getAvailabilityWindows,
   getBusyIntervals,
@@ -42,7 +43,11 @@ export async function createBooking(
 
   const eventType = await prisma.eventType.findFirst({
     where: { id: eventTypeId, isActive: true },
-    include: { user: { select: { id: true, timezone: true } } },
+    include: {
+      user: {
+        select: { id: true, timezone: true, email: true, name: true, username: true },
+      },
+    },
   })
 
   if (!eventType) {
@@ -103,6 +108,26 @@ export async function createBooking(
 
     revalidatePath('/[username]/[slug]', 'page')
     revalidatePath('/dashboard/bookings')
+
+    // 邮件失败不回滚预约：人已经约上了，通知发不出去是次要问题
+    try {
+      await sendBookingEmails({
+        eventTitle: eventType.title,
+        duration: eventType.duration,
+        hostName: eventType.user.name ?? eventType.user.username,
+        hostEmail: eventType.user.email,
+        guestName,
+        guestEmail,
+        guestTimezone,
+        hostTimezone: eventType.user.timezone,
+        startTime: startAt,
+        endTime: endAt,
+        bookingId: created.id,
+        notes,
+      })
+    } catch (error: unknown) {
+      console.error('[createBooking] 邮件发送失败', error)
+    }
 
     return ok(created)
   } catch (error: unknown) {

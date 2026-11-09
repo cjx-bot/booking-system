@@ -1,10 +1,22 @@
-export default function AvailabilityPage() {
-  return (
-    <div>
-      <h1 className="text-xl font-semibold tracking-tight">可用时间</h1>
-      <p className="mt-1 text-[13px] text-ink-secondary">
-        可用时间页在 T3.2 实现。
-      </p>
-    </div>
-  )
+import { redirect } from 'next/navigation'
+import { AvailabilityEditor } from '@/components/dashboard/AvailabilityEditor'
+import { auth } from '@/lib/auth'
+import { getAvailability } from '@/lib/queries/availability'
+
+export const dynamic = 'force-dynamic'
+export const metadata = { title: '可用时间' }
+
+export default async function AvailabilityPage() {
+  const session = await auth()
+  if (!session?.user) redirect('/login')
+
+  const rows = await getAvailability(session.user.id)
+
+  const items = rows.map((row) => ({
+    weekday: row.weekday,
+    startMinute: row.startMinute,
+    endMinute: row.endMinute,
+  }))
+
+  return <AvailabilityEditor rows={items} />
 }

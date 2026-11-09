@@ -37,6 +37,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             email: true,
             name: true,
             username: true,
+            timezone: true,
             password: true,
           },
         })
@@ -51,6 +52,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: user.email,
           name: user.name,
           username: user.username,
+          timezone: user.timezone,
         }
       },
     }),
@@ -61,12 +63,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.id = user.id
         token.username = user.username
+        token.timezone = user.timezone
       }
       return token
     },
     session({ session, token }) {
       if (typeof token.id === 'string') session.user.id = token.id
       if (typeof token.username === 'string') session.user.username = token.username
+      session.user.timezone =
+        typeof token.timezone === 'string' ? token.timezone : 'Asia/Shanghai'
       return session
     },
   },
