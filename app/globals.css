@@ -1,0 +1,111 @@
+@import 'tailwindcss';
+
+/* ============================================================
+   设计令牌 · T0.3
+   规则：组件里只允许用这里的语义名，禁止写死十六进制色值。
+   ============================================================ */
+
+@theme {
+  /* 表面 */
+  --color-canvas: #ffffff;
+  --color-surface: #f9fafb;
+  --color-surface-2: #f3f4f6;
+
+  /* 文字 */
+  --color-ink: #0f1115;
+  --color-ink-secondary: #4b5563;
+  --color-ink-muted: #9ca3af;
+
+  /* 线 */
+  --color-line: #e5e7eb;
+  --color-line-strong: #d1d5db;
+
+  /* 强调色（全站唯一） */
+  --color-brand: #2b54d4;
+  --color-brand-hover: #2345b5;
+  --color-brand-soft: #edf1fd;
+  --color-brand-line: #d3ddf8;
+
+  /* 语义色 */
+  --color-success: #0e7c66;
+  --color-success-soft: #e7f3f0;
+  --color-success-line: #cce6df;
+
+  --color-danger: #b4441f;
+  --color-danger-soft: #fbede8;
+  --color-danger-line: #f3d8ce;
+
+  --color-warning: #8a6a16;
+  --color-warning-soft: #faf3e0;
+  --color-warning-line: #eee0bc;
+
+  /* 圆角 */
+  --radius-field: 8px;
+  --radius-card: 12px;
+  --radius-pill: 999px;
+
+  /* 字体：不引入外部字体，避免构建期拉取 Google Fonts 失败 */
+  --font-sans:
+    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'Cascadia Mono', Consolas, 'Courier New', monospace;
+
+  /* 阴影：只有两级，够用就好 */
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.06);
+  --shadow-pop: 0 8px 24px rgb(16 24 40 / 0.1), 0 2px 6px rgb(16 24 40 / 0.06);
+}
+
+/* ============================================================
+   基础样式
+   ============================================================ */
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* 键盘焦点必须可见，鼠标点击不显示 */
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--color-brand-soft);
+    color: var(--color-brand-hover);
+  }
+
+  /* 数字等宽，避免时段列表跳动 */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ============================================================
+   工具类（只在多处重复时才加，能内联就内联）
+   ============================================================ */
+
+@utility container-page {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 1080px;
+  padding-inline: 20px;
+}
+
+@utility container-narrow {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 720px;
+  padding-inline: 20px;
+}
