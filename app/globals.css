@@ -20,6 +20,9 @@
   --color-line: #e5e7eb;
   --color-line-strong: #d1d5db;
 
+  /* 强调色上的前景 */
+  --color-on-brand: #ffffff;
+
   /* 强调色（全站唯一） */
   --color-brand: #2b54d4;
   --color-brand-hover: #2345b5;
