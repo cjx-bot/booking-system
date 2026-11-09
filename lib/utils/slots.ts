@@ -198,7 +198,7 @@ function resolveWindows(args: {
   return windows
 }
 
-function shiftDate(
+export function shiftDate(
   parts: DateParts,
   days: number,
 ): DateParts {

@@ -23,11 +23,13 @@
   },
   "packageManager": "pnpm@11.13.0",
   "dependencies": {
+    "@auth/prisma-adapter": "2.11.3",
     "@prisma/adapter-better-sqlite3": "7.10.1",
     "@prisma/client": "7.10.1",
     "bcryptjs": "3.0.3",
     "better-sqlite3": "13.0.3",
     "next": "16.4.5",
+    "next-auth": "5.0.0-beta.32",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "zod": "4.6.7"
