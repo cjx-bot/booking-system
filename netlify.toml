@@ -9,3 +9,4 @@
   # 让 prisma.config.ts 选 prisma/postgres.prisma
   DATABASE_PROVIDER = "postgres"
   NEXT_TELEMETRY_DISABLED = "1"
+
