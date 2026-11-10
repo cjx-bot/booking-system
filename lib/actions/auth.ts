@@ -2,14 +2,14 @@
 
 import { AuthError } from 'next-auth'
 import { signIn, signOut } from '@/lib/auth'
-import { loginSchema } from '@/lib/schemas/auth'
+import { loginFormSchema } from '@/lib/schemas/auth'
 import { fail, ok, toFieldErrors, type ActionResult } from './types'
 
 export async function loginAction(
   _prevState: ActionResult<null> | null,
   formData: FormData,
 ): Promise<ActionResult<null>> {
-  const parsed = loginSchema.safeParse({
+  const parsed = loginFormSchema.safeParse({
     email: formData.get('email'),
     password: formData.get('password'),
     callbackUrl: formData.get('callbackUrl') || undefined,

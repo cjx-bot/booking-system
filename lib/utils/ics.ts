@@ -13,18 +13,30 @@ function escapeIcsText(value: string): string {
     .replace(/\r?\n/g, '\\n')
 }
 
-/** 每行不得超过 75 字节，超出要折行（续行以空格开头） */
+const encoder = new TextEncoder()
+
+/**
+ * 每行不得超过 75 **字节**（不是字符），超出要折行，续行以空格开头。
+ * 中文一个字 3 字节，按字符数折行会在 26 个字左右就超限——
+ * Outlook 和部分安卓日历会截断或拒收超长行的 .ics。
+ * 折行不能从多字节字符中间切，所以逐字符累加字节数。
+ */
 function foldLine(line: string): string {
-  if (line.length <= 75) return line
+  if (encoder.encode(line).length <= 75) return line
 
   const parts: string[] = []
-  let rest = line
+  let current = ''
 
-  while (rest.length > 75) {
-    parts.push(rest.slice(0, 75))
-    rest = rest.slice(75)
+  for (const char of line) {
+    if (encoder.encode(current + char).length > 75) {
+      parts.push(current)
+      current = char
+    } else {
+      current += char
+    }
   }
-  parts.push(rest)
+
+  if (current !== '') parts.push(current)
 
   return parts.join('\r\n ')
 }

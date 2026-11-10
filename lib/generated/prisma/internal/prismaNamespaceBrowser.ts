@@ -57,7 +57,8 @@ export const ModelName = {
   VerificationToken: 'VerificationToken',
   EventType: 'EventType',
   Availability: 'Availability',
-  Booking: 'Booking'
+  Booking: 'Booking',
+  BookingLock: 'BookingLock'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -168,6 +169,15 @@ export const BookingScalarFieldEnum = {
 } as const
 
 export type BookingScalarFieldEnum = (typeof BookingScalarFieldEnum)[keyof typeof BookingScalarFieldEnum]
+
+
+export const BookingLockScalarFieldEnum = {
+  id: 'id',
+  hostId: 'hostId',
+  startAt: 'startAt'
+} as const
+
+export type BookingLockScalarFieldEnum = (typeof BookingLockScalarFieldEnum)[keyof typeof BookingLockScalarFieldEnum]
 
 
 export const SortOrder = {

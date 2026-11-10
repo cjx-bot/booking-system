@@ -34,15 +34,6 @@ export async function getBookingsByHost(
   }
 }
 
-/** 判断某时段是否已被占用（含 boundary 之外由算法负责，这里只查精确命中） */
-export async function getBookingsBySlot(eventTypeId: string, startTime: Date) {
-  return prisma.booking.findUnique({
-    where: {
-      eventTypeId_startTime: { eventTypeId, startTime },
-    },
-  })
-}
-
 /** 时段算法用：拉取某主理人在 [from, to) 内所有未取消的预约 */
 export async function getBookingsInRange(
   hostId: string,

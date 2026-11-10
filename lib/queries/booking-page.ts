@@ -1,16 +1,21 @@
+import {
+  BOOKING_WINDOW_DAYS,
+  LEAD_TIME_MINUTES,
+  MS_PER_DAY,
+  SLOT_INTERVAL_MINUTES,
+} from '@/lib/config/booking'
 import { prisma } from '@/lib/db'
-import { getBusyIntervals } from '@/lib/queries/bookings'
 import { getAvailabilityWindows } from '@/lib/queries/availability'
+import { getBusyIntervals } from '@/lib/queries/bookings'
 import { generateSlots, shiftDate, type Slot } from '@/lib/utils/slots'
 import { getLocalDateParts } from '@/lib/utils/timezone'
-
-/** 公开页最多展示未来多少天 */
-export const BOOKING_WINDOW_DAYS = 14
 
 export type BookingPageData = {
   slots: Slot[]
   /** 主理人时区，页面用来标注「以下时间均为 XX 时区」 */
   hostTimezone: string
+  /** 展示窗口天数。页面文案从这里取，不写字面量。 */
+  windowDays: number
 }
 
 /**
@@ -36,10 +41,12 @@ export async function getBookableSlots(
 
   const availability = await getAvailabilityWindows(eventType.user.id)
 
-  const windowEnd = new Date(now.getTime() + (BOOKING_WINDOW_DAYS + 2) * 24 * 3600_000)
+  const windowEnd = new Date(
+    now.getTime() + (BOOKING_WINDOW_DAYS + 2) * MS_PER_DAY,
+  )
   const busy = await getBusyIntervals(
     eventType.user.id,
-    new Date(now.getTime() - 24 * 3600_000),
+    new Date(now.getTime() - MS_PER_DAY),
     windowEnd,
   )
 
@@ -61,12 +68,12 @@ export async function getBookableSlots(
       availability,
       busy,
       now,
-      leadTimeMinutes: 60,
-      slotIntervalMinutes: 15,
+      leadTimeMinutes: LEAD_TIME_MINUTES,
+      slotIntervalMinutes: SLOT_INTERVAL_MINUTES,
     })
 
     slots.push(...daySlots)
   }
 
-  return { slots, hostTimezone }
+  return { slots, hostTimezone, windowDays: BOOKING_WINDOW_DAYS }
 }

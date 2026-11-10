@@ -2,7 +2,7 @@ import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db'
-import { loginSchema } from '@/lib/schemas/auth'
+import { credentialsSchema } from '@/lib/schemas/auth'
 
 /**
  * Auth.js v5 配置。
@@ -27,7 +27,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: '密码', type: 'password' },
       },
       async authorize(credentials) {
-        const parsed = loginSchema.safeParse(credentials)
+        // 只验凭证。Auth.js 会把这个 POST body 里的其它字段（csrfToken、
+        // callbackUrl 等）一并传进来，拿表单契约去校验会误判成密码错误。
+        const parsed = credentialsSchema.safeParse(credentials)
         if (!parsed.success) return null
 
         const user = await prisma.user.findUnique({

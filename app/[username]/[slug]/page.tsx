@@ -94,7 +94,9 @@ export default async function BookingPage({ params }: Props) {
               </div>
               <div className="flex gap-2">
                 <dt className="w-16 shrink-0 text-ink-muted">可约范围</dt>
-                <dd className="text-ink-secondary">未来 14 天</dd>
+                <dd className="text-ink-secondary">
+                  未来 {data?.windowDays ?? 0} 天
+                </dd>
               </div>
             </dl>
           </section>

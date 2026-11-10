@@ -403,7 +403,8 @@ export const ModelName = {
   VerificationToken: 'VerificationToken',
   EventType: 'EventType',
   Availability: 'Availability',
-  Booking: 'Booking'
+  Booking: 'Booking',
+  BookingLock: 'BookingLock'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -419,7 +420,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "account" | "session" | "verificationToken" | "eventType" | "availability" | "booking"
+    modelProps: "user" | "account" | "session" | "verificationToken" | "eventType" | "availability" | "booking" | "bookingLock"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -941,6 +942,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    BookingLock: {
+      payload: Prisma.$BookingLockPayload<ExtArgs>
+      fields: Prisma.BookingLockFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BookingLockFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BookingLockPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BookingLockFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BookingLockPayload>
+        }
+        findFirst: {
+          args: Prisma.BookingLockFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BookingLockPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BookingLockFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BookingLockPayload>
+        }
+        findMany: {
+          args: Prisma.BookingLockFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BookingLockPayload>[]
+        }
+        create: {
+          args: Prisma.BookingLockCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BookingLockPayload>
+        }
+        createMany: {
+          args: Prisma.BookingLockCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.BookingLockCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BookingLockPayload>[]
+        }
+        delete: {
+          args: Prisma.BookingLockDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BookingLockPayload>
+        }
+        update: {
+          args: Prisma.BookingLockUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BookingLockPayload>
+        }
+        deleteMany: {
+          args: Prisma.BookingLockDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BookingLockUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BookingLockUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BookingLockPayload>[]
+        }
+        upsert: {
+          args: Prisma.BookingLockUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BookingLockPayload>
+        }
+        aggregate: {
+          args: Prisma.BookingLockAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBookingLock>
+        }
+        groupBy: {
+          args: Prisma.BookingLockGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BookingLockGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BookingLockCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BookingLockCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1072,6 +1147,15 @@ export const BookingScalarFieldEnum = {
 } as const
 
 export type BookingScalarFieldEnum = (typeof BookingScalarFieldEnum)[keyof typeof BookingScalarFieldEnum]
+
+
+export const BookingLockScalarFieldEnum = {
+  id: 'id',
+  hostId: 'hostId',
+  startAt: 'startAt'
+} as const
+
+export type BookingLockScalarFieldEnum = (typeof BookingLockScalarFieldEnum)[keyof typeof BookingLockScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1288,6 +1372,7 @@ export type GlobalOmitConfig = {
   eventType?: Prisma.EventTypeOmit
   availability?: Prisma.AvailabilityOmit
   booking?: Prisma.BookingOmit
+  bookingLock?: Prisma.BookingLockOmit
 }
 
 /* Types for Logging */

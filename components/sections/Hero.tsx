@@ -1,17 +1,27 @@
 import Link from 'next/link'
 import { Container } from '@/components/ui/Container'
+import { MS_PER_DAY } from '@/lib/config/booking'
 import { HERO } from '@/lib/content/home'
+
+const WEEKDAY_NAMES = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+
+/**
+ * 示意图里的日期条。
+ * 在模块顶层算一次（这个页面是静态的，构建期求值一次就固化了）——
+ * 写死日期会自相矛盾：原来写「明天 11/10」，而当天就是 11/10。
+ */
+const PREVIEW_DAYS = [0, 1, 2, 3, 6].map((offset, index) => {
+  const day = new Date(Date.now() + offset * MS_PER_DAY)
+  return {
+    key: offset,
+    label: offset === 0 ? '今天' : offset === 1 ? '明天' : WEEKDAY_NAMES[day.getDay()] ?? '',
+    date: `${day.getMonth() + 1}/${day.getDate()}`,
+    active: index === 2,
+  }
+})
 
 /** Hero 内的产品示意：用 CSS 画窗口框，不引外部图片 */
 function SchedulePreview() {
-  const days = [
-    { label: '明天', date: '11/10' },
-    { label: '周三', date: '11/11' },
-    { label: '周四', date: '11/12', active: true },
-    { label: '周五', date: '11/13' },
-    { label: '周一', date: '11/16' },
-  ]
-
   const times = ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30']
 
   return (
@@ -46,9 +56,9 @@ function SchedulePreview() {
 
         {/* 日期条 */}
         <div className="mt-3.5 flex gap-1 overflow-hidden">
-          {days.map((day) => (
+          {PREVIEW_DAYS.map((day) => (
             <div
-              key={day.date}
+              key={day.key}
               className={
                 day.active
                   ? 'flex min-w-0 flex-1 flex-col items-center rounded-[6px] bg-brand px-1 py-1.5 text-on-brand'

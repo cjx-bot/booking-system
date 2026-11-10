@@ -1,12 +1,13 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useMemo, useState, useSyncExternalStore, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { createBooking } from '@/lib/actions/booking'
+import { BOOKING_WINDOW_DAYS } from '@/lib/config/booking'
 
 export type SerializedSlot = {
   start: string
@@ -30,6 +31,16 @@ type DayGroup = {
 }
 
 const WEEKDAY_FORMATTER_CACHE = new Map<string, Intl.DateTimeFormat>()
+
+/** 时区不来自外部数据源，不需要订阅任何东西 */
+function subscribeNoop() {
+  return () => {}
+}
+
+/** 客户端快照：每次返回同一个字符串（值相等），不会造成无限循环 */
+function getBrowserTimezone() {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+}
 
 function weekdayFormatter(timeZone: string) {
   const cached = WEEKDAY_FORMATTER_CACHE.get(timeZone)
@@ -100,12 +111,16 @@ export function BookingFlow({ eventTypeId, duration, hostTimezone, slots }: Prop
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
-  // 访客时区只能在浏览器拿到；服务端渲染时先用主理人时区占位，
-  // 挂载后立刻用真实时区覆盖（分组在 memo 里重算，不会闪）
-  const [guestTimezone] = useState<string>(() => {
-    if (typeof Intl === 'undefined') return hostTimezone
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || hostTimezone
-  })
+  // 访客时区：服务端不知道，客户端才知道。
+  // 用 useState 初始化函数会在 SSR 和 hydration 各跑一次、拿到不同结果 → 水合失败；
+  // 用 useEffect + setState 会触发级联渲染（ESLint 会拦）。
+  // useSyncExternalStore 正是为这种「两个环境取值不同」设计的：
+  // 服务端快照返回主理人时区，客户端快照返回访客真实时区，React 自己处理切换。
+  const guestTimezone = useSyncExternalStore(
+    subscribeNoop,
+    getBrowserTimezone,
+    () => hostTimezone,
+  )
 
   const days = useMemo(() => groupByDay(slots, guestTimezone), [slots, guestTimezone])
 
@@ -144,7 +159,9 @@ export function BookingFlow({ eventTypeId, duration, hostTimezone, slots }: Prop
   if (days.length === 0) {
     return (
       <div className="rounded-card border border-line bg-canvas p-8 text-center">
-        <p className="text-[14px] font-medium text-ink">最近两周都约满了</p>
+        <p className="text-[14px] font-medium text-ink">
+          最近 {BOOKING_WINDOW_DAYS} 天都约满了
+        </p>
         <p className="mt-1.5 text-[13px] text-ink-secondary">
           换个时间再来看看，或者直接联系主理人
         </p>

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/db'
+import { isUniqueViolation } from '@/lib/db/errors'
 import {
   createEventTypeSchema,
   deleteEventTypeSchema,
@@ -9,20 +10,6 @@ import {
 } from '@/lib/schemas/event-type'
 import { requireUserId } from './guard'
 import { fail, ok, toFieldErrors, type ActionResult } from './types'
-
-/**
- * Prisma 唯一约束冲突。用鸭子类型判断而不是 instanceof，
- * 是因为 Prisma 7 把错误类挂在生成客户端的命名空间下，
- * 直接依赖那个类会让 lib/actions 反向依赖生成产物。
- */
-function isUniqueViolation(error: unknown): boolean {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    (error as { code?: unknown }).code === 'P2002'
-  )
-}
 
 export async function createEventType(
   input: unknown,

@@ -1,9 +1,8 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { revalidatePath } from 'next/cache'
 import { Badge } from '@/components/ui/Badge'
 import { auth } from '@/lib/auth'
-import { cancelBooking } from '@/lib/actions/booking'
+import { cancelBookingFromForm } from '@/lib/actions/booking'
 import { getBookingsByHost } from '@/lib/queries/bookings'
 import { cn } from '@/lib/utils/cn'
 
@@ -18,21 +17,6 @@ const FILTERS = [
 
 type Status = (typeof FILTERS)[number]['value']
 
-async function cancelFromForm(formData: FormData) {
-  'use server'
-
-  const id = formData.get('id')
-  if (typeof id !== 'string' || id === '') return
-
-  const result = await cancelBooking({ id })
-  if (!result.ok) {
-    // 失败也不抛错：列表页刷新后会显示真实状态，用户能看出没取消成功
-    console.error('[cancelFromForm]', result.error)
-  }
-
-  revalidatePath('/dashboard/bookings')
-}
-
 type Props = {
   searchParams: Promise<{ status?: string; page?: string }>
 }
@@ -45,9 +29,20 @@ export default async function BookingsPage({ searchParams }: Props) {
   const status: Status = FILTERS.some((item) => item.value === params.status)
     ? (params.status as Status)
     : 'all'
-  const page = Math.max(1, Number(params.page) || 1)
+  const requestedPage = Math.max(1, Number(params.page) || 1)
 
-  const data = await getBookingsByHost(session.user.id, { status, page, pageSize: 20 })
+  const data = await getBookingsByHost(session.user.id, {
+    status,
+    page: requestedPage,
+    pageSize: 20,
+  })
+
+  // 页码超出上界时跳到最后一页。
+  // 不夹上界的话 ?page=999999 会执行一个巨大的 skip，且页脚显示「第 999999 / 1 页」。
+  if (data.items.length === 0 && requestedPage > 1) {
+    redirect(`/dashboard/bookings?status=${status}&page=${data.totalPages}`)
+  }
+
   const timezone = session.user.timezone ?? 'Asia/Shanghai'
 
   // Server Component 每次请求只执行一次，取当前时间不会造成「重渲染结果不稳定」
@@ -141,7 +136,7 @@ export default async function BookingsPage({ searchParams }: Props) {
                   </div>
 
                   {!cancelled && !past ? (
-                    <form action={cancelFromForm} className="shrink-0">
+                    <form action={cancelBookingFromForm} className="shrink-0">
                       <input type="hidden" name="id" value={booking.id} />
                       <button
                         type="submit"

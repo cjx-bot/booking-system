@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>预约系统 · 代码审查报告</title>
+<style>
+  :root{
+    --canvas:#ffffff; --surface:#f9fafb; --surface2:#f3f4f6;
+    --ink:#0f1115; --ink2:#4b5563; --muted:#9ca3af;
+    --line:#e5e7eb; --line2:#d1d5db;
+    --brand:#2b54d4; --brand-soft:#edf1fd; --brand-line:#d3ddf8;
+    --danger:#b4441f; --danger-soft:#fbede8; --danger-line:#f3d8ce;
+    --warn:#8a6a16; --warn-soft:#faf3e0; --warn-line:#eee0bc;
+    --ok:#0e7c66; --ok-soft:#e7f3f0; --ok-line:#cce6df;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--surface); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+    font-size:14px; line-height:1.65; -webkit-font-smoothing:antialiased;
+  }
+  code,pre,.mono{font-family:'Cascadia Mono',Consolas,'Courier New',monospace}
+  .wrap{max-width:1180px;margin:0 auto;padding:40px 24px 80px}
+  .grid{display:grid;grid-template-columns:210px minmax(0,1fr);gap:44px;align-items:start}
+  @media (max-width:900px){.grid{grid-template-columns:1fr;gap:24px}}
+
+  header.top{margin-bottom:28px}
+  .eyebrow{font-size:11.5px;font-weight:600;letter-spacing:.08em;color:var(--brand);text-transform:uppercase;margin:0 0 8px}
+  h1{font-size:27px;line-height:1.25;letter-spacing:-.02em;margin:0 0 10px;font-weight:650}
+  .sub{color:var(--ink2);font-size:13.5px;margin:0}
+  .meta{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px}
+  .chip{font-size:11.5px;padding:3px 9px;border-radius:999px;background:var(--canvas);border:1px solid var(--line);color:var(--ink2)}
+  .chip b{color:var(--ink);font-weight:600}
+
+  nav.toc{position:sticky;top:24px;font-size:12.5px}
+  nav.toc p{margin:0 0 8px;font-size:11px;letter-spacing:.06em;color:var(--muted);font-weight:600}
+  nav.toc a{display:block;padding:5px 10px;color:var(--ink2);text-decoration:none;border-left:2px solid var(--line);border-radius:0 6px 6px 0}
+  nav.toc a:hover{background:var(--brand-soft);color:var(--brand);border-left-color:var(--brand)}
+  nav.toc a .n{color:var(--muted);font-size:11px;margin-left:4px}
+
+  section{margin-bottom:34px;scroll-margin-top:20px}
+  h2{font-size:17px;letter-spacing:-.01em;margin:0 0 14px;font-weight:620;display:flex;align-items:baseline;gap:9px}
+  h2 .cnt{font-size:11.5px;font-weight:500;color:var(--muted)}
+  h3{font-size:13.5px;margin:22px 0 8px;font-weight:600}
+
+  .card{background:var(--canvas);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+  .verdict{border-left:3px solid var(--ok);background:var(--ok-soft);border-top:1px solid var(--ok-line);border-bottom:1px solid var(--ok-line);border-right:1px solid var(--ok-line)}
+  .verdict h3{margin:0 0 6px;font-size:14.5px;color:var(--ok)}
+  .verdict p{margin:0;color:var(--ink2);font-size:13px}
+  .verdict p + p{margin-top:8px}
+
+  table{width:100%;border-collapse:collapse;font-size:12.8px;background:var(--canvas);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  th{text-align:left;font-weight:600;font-size:11.5px;letter-spacing:.04em;color:var(--muted);background:var(--surface2);padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+  td{padding:9px 12px;border-bottom:1px solid var(--surface2);vertical-align:top;color:var(--ink2)}
+  tr:last-child td{border-bottom:none}
+  td.key{color:var(--ink);font-weight:500;white-space:nowrap}
+  .pass{color:var(--ok);font-weight:600}
+  .num{font-variant-numeric:tabular-nums}
+
+  .issue{background:var(--canvas);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:12px}
+  .issue-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
+  .sev{flex-shrink:0;font-size:10.5px;font-weight:700;letter-spacing:.04em;padding:2px 7px;border-radius:5px;margin-top:1px}
+  .p0{background:var(--danger);color:#fff}
+  .p1{background:var(--danger-soft);color:var(--danger);border:1px solid var(--danger-line)}
+  .p2{background:var(--warn-soft);color:var(--warn);border:1px solid var(--warn-line)}
+  .p3{background:var(--surface2);color:var(--ink2);border:1px solid var(--line2)}
+  .issue-title{font-size:14px;font-weight:600;margin:0;line-height:1.4;flex:1}
+  .id{color:var(--muted);font-weight:500;font-size:12px;margin-right:5px}
+
+  .loc{font-size:11.8px;color:var(--ink2);background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:7px 10px;margin:0 0 10px;word-break:break-all}
+  .loc span{color:var(--muted)}
+  .loc b{color:var(--brand);font-weight:500}
+
+  .issue p{margin:0 0 8px;font-size:13px;color:var(--ink2)}
+  .issue p:last-child{margin-bottom:0}
+  .issue strong{color:var(--ink);font-weight:600}
+  .lbl{display:inline-block;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.04em;margin-right:6px}
+
+  pre{background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.55;overflow-x:auto;margin:8px 0 10px;color:var(--ink)}
+  pre .c{color:var(--muted)}
+  pre .bad{color:var(--danger)}
+  pre .good{color:var(--ok)}
+  .inline{background:var(--surface2);border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:12px}
+
+  .tag{display:inline-block;font-size:11px;padding:1px 6px;border-radius:4px;background:var(--brand-soft);color:var(--brand);border:1px solid var(--brand-line);margin-right:4px}
+  .tag.repro{background:var(--danger-soft);color:var(--danger);border-color:var(--danger-line)}
+
+  ol.plan{margin:0;padding-left:20px;font-size:13px;color:var(--ink2)}
+  ol.plan li{margin-bottom:9px}
+  ol.plan li b{color:var(--ink)}
+  footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-size:11.8px;color:var(--muted)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:760px){.two{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <p class="eyebrow">Code Review · 2026-11-10</p>
+  <h1>预约系统 · 代码审查报告</h1>
+  <p class="sub">审查对象：<span class="mono">E:\软件\工作vc\预约系统</span>（Next.js 16 + React 19 + Prisma 7 + SQLite）</p>
+  <div class="meta">
+    <span class="chip">手写代码 <b>6331</b> 行</span>
+    <span class="chip">生成代码 <b>13321</b> 行</span>
+    <span class="chip">测试 <b>40</b> 个全绿</span>
+    <span class="chip">问题 <b>28</b> 项</span>
+  </div>
+</header>
+
+<div class="grid">
+  <nav class="toc">
+    <p>目录</p>
+    <a href="#run">一 · 运行验证 <span class="n">✓</span></a>
+    <a href="#verdict">二 · 总体判断</a>
+    <a href="#p0">三 · P0 <span class="n">1</span></a>
+    <a href="#p1">四 · P1 <span class="n">8</span></a>
+    <a href="#p2">五 · P2 <span class="n">13</span></a>
+    <a href="#p3">六 · P3 <span class="n">8</span></a>
+    <a href="#plan">七 · 修复顺序</a>
+    <a href="#appendix">八 · 复查方法</a>
+  </nav>
+
+  <main>
+
+  <!-- ============ 一、运行验证 ============ -->
+  <section id="run">
+    <h2>一 · 运行验证 <span class="cnt">demo 能不能跑起来</span></h2>
+
+    <div class="card verdict" style="margin-bottom:14px">
+      <h3>结论：能跑，而且跑得干净</h3>
+      <p>项目用自带 <span class="mono">runtime/node.exe</span>（v22.22.2）启动，620ms ready。首页、公开预约页、定价页、登录页、后台四页全部正常渲染，公开页真实生成了可预约时段（09:30 / 10:00 / 10:30…），演示账号可登录，未授权访问正确跳到登录页，不存在的用户名正确返回 404。</p>
+      <p>四项质量门禁全绿：<b>40 个单测通过</b>、<b>tsc --noEmit 零错误</b>、<b>eslint 零告警</b>、<b>next build 构建成功</b>。</p>
+    </div>
+
+    <table>
+      <tr><th>验证项</th><th>结果</th><th>说明</th></tr>
+      <tr><td class="key">服务启动</td><td class="pass">通过</td><td>Ready in 620ms，启动日志无异常</td></tr>
+      <tr><td class="key">首页 /</td><td class="pass">200</td><td>标题正常：预约系统 · 把约时间这件事压缩成一个链接</td></tr>
+      <tr><td class="key">公开页 /demo</td><td class="pass">200</td><td>列出 2 个事件类型</td></tr>
+      <tr><td class="key">预约页 /demo/30min</td><td class="pass">200</td><td class="num">渲染出真实时段 09:30 / 10:00 / 10:30…</td></tr>
+      <tr><td class="key">/pricing /login /design-system</td><td class="pass">200</td><td>均正常</td></tr>
+      <tr><td class="key">后台未登录</td><td class="pass">307 → /login</td><td>4 个后台页面全部正确拦截</td></tr>
+      <tr><td class="key">演示账号登录</td><td class="pass">通过</td><td>demo@example.com / demo1234 → session 返回林小满 / Asia/Shanghai</td></tr>
+      <tr><td class="key">后台四页（已登录）</td><td class="pass">200</td><td>概览、事件类型、可用时间、预约列表均有真实数据</td></tr>
+      <tr><td class="key">非法路由</td><td class="pass">404</td><td>/nosuchuser、/demo/nosuchslug、/booking/nonexistent</td></tr>
+      <tr><td class="key">单元测试</td><td class="pass">40 / 40</td><td>slots 24 个 + timezone 16 个</td></tr>
+      <tr><td class="key">类型检查 / Lint / 构建</td><td class="pass">全绿</td><td>tsc 0 error，eslint 0 warning，build 13 条路由</td></tr>
+    </table>
+
+    <h3>两个环境层面的注意点（不是代码缺陷）</h3>
+    <p style="font-size:13px;color:var(--ink2);margin:0 0 8px">
+      <b>1. 不能用系统 Node 启动。</b><span class="inline">better-sqlite3</span> 是原生模块，绑 ABI 127（Node 22）。系统装了 Node 24（ABI 137），直接 <span class="inline">pnpm dev</span> 会报 <span class="inline">NODE_MODULE_VERSION 127 vs 137</span>，页面 500。README 和 <span class="inline">启动预览.bat</span> 都写了这一点，属于已知且已规避。
+    </p>
+    <p style="font-size:13px;color:var(--ink2);margin:0">
+      <b>2. 端口 3000 有残留进程。</b>第一次启动时被 Next 拦下（<span class="inline">Another next dev server is already running</span>，PID 12372）。这是上次没关干净，不是代码问题；已终止并改用 3100 端口验证。
+    </p>
+  </section>
+
+  <!-- ============ 二、总体判断 ============ -->
+  <section id="verdict">
+    <h2>二 · 总体判断 <span class="cnt">先回答问题：「这是屎山吗」</span></h2>
+
+    <div class="card" style="border-left:3px solid var(--ok)">
+      <h3 style="margin:0 0 8px;font-size:14.5px">不是屎山。这是一份中上水平的代码，问题不在「乱」，在「契约有洞」。</h3>
+      <p style="margin:0 0 10px;font-size:13px;color:var(--ink2)">
+        按通常判屎山的七个指标逐条对：<b>重复冗余</b>、<b>超长函数</b>、<b>深层嵌套</b>、<b>命名混乱</b>、<b>硬编码</b>、<b>缺注释</b>、<b>高耦合</b>。其中只有第 5 项（硬编码）比较严重，其余都在可接受范围，有些甚至比多数商业项目做得好。
+      </p>
+      <div class="two" style="margin-top:12px">
+        <div style="background:var(--ok-soft);border:1px solid var(--ok-line);border-radius:8px;padding:10px 12px">
+          <p style="margin:0 0 4px;font-size:12px;font-weight:600;color:var(--ok)">做对的地方</p>
+          <p style="margin:0;font-size:12px;color:var(--ink2);line-height:1.6">
+            · 全库 <b>0 个 any</b>、<b>0 个 ts-ignore</b>（只有 1 处 eslint-disable）<br>
+            · app → components → lib 单向依赖，边界清楚<br>
+            · 注释写的是「为什么」不是「是什么」，可读性高<br>
+            · 最危险的时段算法抽成纯函数，40 个单测覆盖夏令时/跨时区<br>
+            · 设计令牌集中在 globals.css，无 tailwind.config 散落<br>
+            · 生成代码隔离在 lib/generated，一眼能分清
+          </p>
+        </div>
+        <div style="background:var(--warn-soft);border:1px solid var(--warn-line);border-radius:8px;padding:10px 12px">
+          <p style="margin:0 0 4px;font-size:12px;font-weight:600;color:var(--warn)">真正的系统性问题</p>
+          <p style="margin:0;font-size:12px;color:var(--ink2);line-height:1.6">
+            · <b>抽象建了却不用</b>：requireSession、groupSlotsByDate、formatDateInTimeZone、4 个查询函数全是死代码<br>
+            · <b>用了却没抽象</b>：时区格式化在 5 处各写一遍、鉴权样板在 5 个页面各写一遍、isUniqueViolation 复制两份<br>
+            · 这一对加起来，就是「伪复用」——比堆垃圾代码更隐蔽，因为读起来每处都干净，全局看是在重复劳动
+          </p>
+        </div>
+      </div>
+      <p style="margin:12px 0 0;font-size:13px;color:var(--ink2)">
+        下面 28 项里，<b>9 项会直接影响用户或数据</b>，其余 19 项是维护成本。建议先修 P0 + P1，P2 攒到下一轮重构一起做。
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ 三、P0 ============ -->
+  <section id="p0">
+    <h2>三 · P0 · 会产生错误数据 <span class="cnt">1 项 · 已实测复现</span></h2>
+
+    <div class="issue" style="border-color:var(--danger-line)">
+      <div class="issue-head">
+        <span class="sev p0">P0</span>
+        <p class="issue-title"><span class="id">#1</span>同一主理人、同一时刻，可以被约两次（跨事件类型）</p>
+      </div>
+      <p class="loc"><span>位置</span> <b>prisma/schema.prisma:140</b> · <b>lib/actions/booking.ts:67-107</b></p>
+      <p><span class="lbl">现象</span>防重复预约的唯一权威是 <span class="inline">@@unique([eventTypeId, startTime])</span>。这个约束只保证「同一个事件类型在同一时刻只有一条」，<strong>不保证「同一个人在同一时刻只有一条」</strong>。而应用层的 <span class="inline">isSlotBookable()</span> 是「先查占用、再插入」——两个请求只要在查与插之间错开，就都能通过。</p>
+      <p><span class="lbl">实测</span><span class="tag repro">已复现</span>直接对 dev.db 插入两条：<span class="inline">30min</span> 与 <span class="inline">60min</span>，都放在 <span class="inline">2026-11-15T08:00:00Z</span>。</p>
+<pre>插入成功：30min @ 2026-11-15T08:00:00.000Z
+插入成功：60min @ 2026-11-15T08:00:00.000Z
+同一时刻共存的预约数: 2  ← 双预约成立</pre>
+      <p><span class="lbl">影响</span>真实场景：两个客户同时打开你的公开页，一个约「30 分钟初谈」、一个约「60 分钟深度咨询」，都选了周三 16:00。两人都收到确认邮件，你到点只能见一个。README 里「防重复只靠数据库唯一约束」这句话，在跨类型场景下不成立——这是<strong>项目最核心的设计承诺出现了缺口</strong>。</p>
+      <p><span class="lbl">建议</span>让唯一性绑在「人 + 时间」而不是「项目 + 时间」。SQLite 不支持部分索引，最省事的做法是加一张占位表，与预约在同一事务里写：</p>
+<pre><span class="c">// schema.prisma 新增</span>
+model BookingLock {
+  id       String @id @default(cuid())
+  hostId   String
+  startAt  DateTime
+  @@unique([hostId, startAt])   <span class="c">// 真正的并发闸门</span>
+}
+
+<span class="c">// createBooking：把 create 和 lock 放进同一事务</span>
+await prisma.$transaction([
+  prisma.bookingLock.create({ data: { hostId, startAt: startAt } }),
+  prisma.booking.create({ data: { ... } }),
+])</pre>
+      <p style="margin-top:8px">迁移到 PostgreSQL 后可直接用排他约束，一个 DDL 解决，不用改业务代码：<span class="inline">EXCLUDE USING gist (hostId WITH =, tstzrange(startTime, endTime) WITH &amp;&amp;)</span>。</p>
+    </div>
+  </section>
+
+  <!-- ============ 四、P1 ============ -->
+  <section id="p1">
+    <h2>四 · P1 · 安全边界缺失 / 会让用户操作出错 <span class="cnt">8 项</span></h2>
+
+    <div class="issue">
+      <div class="issue-head">
+        <span class="sev p1">P1</span>
+        <p class="issue-title"><span class="id">#2</span>取消预约没有任何归属校验，任何登录用户可取消别人的预约</p>
+      </div>
+      <p class="loc"><span>位置</span> <b>lib/actions/booking.ts:150-190</b> · 调用方 <b>app/dashboard/bookings/page.tsx:21-34</b></p>
+      <p><span class="lbl">现象</span><span class="inline">cancelBooking</span> 只做了 <span class="inline">findUnique({ where: { id } })</span>，<strong>既没取 session，也没比对 <span class="inline">booking.hostId</span></strong>。而它被注册成了 Server Action——本质是一个公开可 POST 的端点。同时 <span class="inline">/booking/[id]</span> 页面把编号直接展示在页面上（第 122-126 行），邮件里也带这个链接。</p>
+      <p><span class="lbl">影响</span>拿到任意一个 booking id 的人，只要有个账号，就能取消那条预约。cuid 不可枚举，所以不是「拖库」级风险，但<strong>破坏性操作零授权</strong>这件事本身不该存在。另外注意：注释写着「访客凭预约 ID 也能取消」，可访客端<strong>根本没有取消入口</strong>——这个能力既没实现，又留下了洞。</p>
+      <p><span class="lbl">建议</span>分两条路走清楚，别混着：</p>
+<pre><span class="c">// 主理人取消：必须验宿主</span>
+const userId = await requireUserId()
+if (!userId) return fail('请先登录')
+const booking = await prisma.booking.findFirst({
+  where: { id: parsed.data.id, hostId: userId },   <span class="good">// 关键：where 里带 hostId</span>
+  select: { id: true, status: true, startTime: true },
+})
+
+<span class="c">// 访客取消：另开一个 action，用签名 token 而不是裸 id</span>
+<span class="c">// token = HMAC(bookingId + 过期时间, AUTH_SECRET)，邮件链接带它</span></pre>
+      <p style="margin-top:8px">顺带说：现在取消是<strong>点一下直接生效、无二次确认、不可撤销</strong>（第 143-152 行）。误触就是一条真实预约被取消，建议加确认。</p>
+    </div>
+
+    <div class="issue">
+      <div class="issue-head">
+        <span class="sev p1">P1</span>
+        <p class="issue-title"><span class="id">#3</span>访客时区在服务端和客户端算出来不一样，必然触发水合报错</p>
+      </div>
+      <p class="loc"><span>位置</span> <b>components/booking/BookingFlow.tsx:105-110</b>（另见 64-97 的分组逻辑）</p>
+      <p><span class="lbl">现象</span></p>
+<pre>const [guestTimezone] = useState&lt;string&gt;(() =&gt; {
+  if (typeof Intl === 'undefined') return hostTimezone
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || hostTimezone
+})</pre>
+      <p>注释说「服务端渲染时先用主理人时区占位，挂载后立刻用真实时区覆盖」。<strong>但 useState 的初始化函数不是 useEffect</strong>：它在 SSR 时跑一次（拿到服务器的 Asia/Shanghai），在客户端 hydration 时又跑一次（拿到浏览器的时区）。两次结果不同，React 就会判定水合失败。已确认 SSR 输出里访客时区恒为服务器时区：</p>
+<pre><span class="c">$ curl .../demo/30min | grep -oE "Asia/Shanghai" | wc -l</span>
+5   <span class="c">← 不管访客在哪，服务端都按 Asia/Shanghai 渲染</span></pre>
+      <p><span class="lbl">影响</span>海外访客每次打开预约页，控制台一条 hydration 报错，日期分组和时段会被整块重算重绘。这也是为什么这个组件没法享受 SSR——它渲染出来的东西对一半用户是错的。</p>
+      <p><span class="lbl">建议</span>时区必须延迟到挂载后设置：</p>
+<pre>const [guestTimezone, setGuestTimezone] = useState(hostTimezone)
+useEffect(() =&gt; {
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+  if (tz) setGuestTimezone(tz)
+}, [hostTimezone])</pre>
+      <p style="margin-top:8px">首屏显示主理人时区、挂载后切到访客时区，这次才是真的「不会闪」。</p>
+    </div>
+
+    <div class="issue">
+      <div class="issue-head">
+        <span class="sev p1">P1</span>
+        <p class="issue-title"><span class="id">#4</span>邮件发送失败会被当成成功，日志里永远看不到「发送失败」</p>
+      </div>
+      <p class="loc"><span>位置</span> <b>lib/email/send.ts:68-91</b></p>
+      <p><span class="lbl">现象</span></p>
+<pre>const results = await Promise.allSettled([ resend.emails.send(...), resend.emails.send(...) ])
+const failures = results.filter((item) =&gt; item.status === 'rejected')
+if (failures.length &gt; 0) { ... return { sent: false, reason: 'partial-failure' } }
+return { sent: true }</pre>
+      <p>查了 resend@6.37.0 的类型定义：<span class="inline">send()</span> 返回 <span class="inline">Promise&lt;CreateEmailResponse&gt;</span>，也就是 <span class="inline">{ data, error }</span> 的联合体——<strong>API 报错时不 throw，而是把 error 放在返回值里</strong>。只有网络层异常才会 reject。</p>
+      <p><span class="lbl">影响</span>域名没验证、收件人被退信、配额超限——这些最常见的失败全部走 <span class="inline">fulfilled</span> 分支，<span class="inline">failures</span> 永远是空数组，函数返回 <span class="inline">{ sent: true }</span>。运营上会变成「以为发了，其实一封没到」，而这条链路上没有任何一处会告诉你。</p>
+      <p><span class="lbl">建议</span></p>
+<pre>const results = await Promise.allSettled([...])
+const failed = results.filter((r) =&gt;
+  r.status === 'rejected' || (r.status === 'fulfilled' &amp;&amp; r.value.error)
+)
+if (failed.length &gt; 0) {
+  console.error('[email] 发送失败', failed.map((r) =&gt;
+    r.status === 'rejected' ? r.reason : r.value.error))
+  return { sent: false, reason: 'partial-failure' }
+}</pre>
+    </div>
+
+    <div class="issue">
+      <div class="issue-head">
+        <span class="sev p1">P1</span>
+        <p class="issue-title"><span class="id">#5</span>编辑弹窗会显示上一个项目的内容（defaultValue 在常挂载的 Dialog 里失效）</p>
+      </div>
+      <p class="loc"><span>位置</span> <b>components/dashboard/EventTypeManager.tsx:190-303</b> · 根因 <b>components/ui/Dialog.tsx:101</b></p>
+      <p><span class="lbl">现象</span>Dialog 只切换原生 <span class="inline">&lt;dialog&gt;</span> 的 open 状态，<strong>子元素始终挂载在 DOM 里</strong>。表单用的是 <span class="inline">defaultValue={editing?.title ?? ''}</span>（第 198、216、241、255、272、289、300 行）——非受控输入框一旦被用户改过，就进入 dirty 状态，之后 React 改 defaultValue 只改 attribute，<strong>不会改屏幕上显示的值</strong>。</p>
+      <p><span class="lbl">影响</span>复现路径：编辑「30 分钟初谈」→ 改标题为「40 分钟」→ 取消 → 点「编辑 60 分钟深度咨询」→ 弹窗里显示的是「40 分钟」。用户以为在改 B，实际表单里是 A 的内容，一保存就把 B 覆盖成 A。这是<strong>会写坏数据</strong>的交互缺陷。</p>
+      <p><span class="lbl">建议</span>最省事的一行：给表单加 key，让它在切换编辑对象时重建。</p>
+<pre>&lt;form key={editing?.id ?? 'new'} id="event-type-form" action={handleSubmit}&gt;</pre>
+      <p style="margin-top:8px">更彻底的做法是让 Dialog 在 <span class="inline">!open</span> 时返回 null（不渲染 children），或改成受控表单。</p>
+    </div>
+
+    <div class="issue">
+      <div class="issue-head">
+        <span class="sev p1">P1</span>
+        <p class="issue-title"><span class="id">#6</span>删除失败时用户看不到任何提示（错误被写进了已关闭的弹窗）</p>
+      </div>
+      <p class="loc"><span>位置</span> <b>components/dashboard/EventTypeManager.tsx:84-98</b></p>
+      <p><span class="lbl">现象</span></p>
+<pre>function handleDelete(item) {
+  ...
+  const result = await deleteEventType({ id: item.id })
+  if (result.ok) { router.refresh(); return }
+  setFormError(result.error)   <span class="bad">// 这个错误渲染在 &lt;Dialog&gt; 内部</span>
+}</pre>
+      <p>而 <span class="inline">formError</span> 的唯一渲染位置在第 305-312 行——在 Dialog 的 children 里。删除时 Dialog 处于关闭状态，用户什么都看不到。</p>
+      <p><span class="lbl">影响</span>删除失败（例如网络断了、记录已被删）表现为「点了删除，列表没变，也没报错」。用户会反复点。</p>
+      <p><span class="lbl">建议</span>删除的错误要提到页面级，用一个独立的 <span class="inline">listError</span> 状态渲染在列表上方；顺便把 <span class="inline">window.confirm</span>（第 85 行）换成项目里已有的 Dialog——现在全站只有这一处用原生 confirm，风格和可访问性都不一致。</p>
+    </div>
+
+    <div class="issue">
+      <div class="issue-head">
+        <span class="sev p1">P1</span>
+        <p class="issue-title"><span class="id">#7</span>登录表单的 schema 被拿去校验登录凭证，密码错误和参数错误被混成一件事</p>
+      </div>
+      <p class="loc"><span>位置</span> <b>lib/auth.ts:30</b> · <b>lib/schemas/auth.ts:7-10</b></p>
+      <p><span class="lbl">现象</span><span class="inline">authorize(credentials)</span> 里用的是表单契约 <span class="inline">loginSchema</span>，它包含一条 <span class="inline">callbackUrl</span> 规则：「必须以 / 开头」。而 Auth.js 传给 <span class="inline">authorize</span> 的 <span class="inline">credentials</span> 就是整个 POST body（源码 <span class="inline">@auth/core/.../callback/index.ts:326</span>：<span class="inline">const credentials = body ?? {}</span>），里面<strong>一定带 callbackUrl</strong>。</p>
+      <p><span class="lbl">实测</span><span class="tag repro">已复现</span>用绝对 URL 当 callbackUrl 直接打认证端点：登录失败，日志只留一行 <span class="inline">CredentialsSignin</span>，前端显示「邮箱或密码不对」。去掉 callbackUrl 就成功。</p>
+      <p><span class="lbl">影响</span>现在恰好没炸——因为 <span class="inline">loginAction</span> 总是传相对路径的 redirectTo。但只要有人把登录改成客户端 <span class="inline">signIn('credentials', {email, password})</span>（next-auth 最常见写法），Auth.js 会用 Referer 补一个绝对 URL 当 callbackUrl，<strong>登录当场全挂，而且报的是「密码不对」</strong>——排查方向完全是错的。这是埋着的雷，不是已经爆的雷。</p>
+      <p><span class="lbl">建议</span>拆成两个契约：凭证契约只认 email/password，callbackUrl 留在表单层单独校验。</p>
+<pre><span class="c">// lib/schemas/auth.ts</span>
+export const credentialsSchema = z.object({
+  email: z.email(),
+  password: z.string().min(8),
+})
+export const loginFormSchema = credentialsSchema.extend({
+  callbackUrl: z.string().startsWith('/', '回跳地址必须是站内路径').optional(),
+})
+
+<span class="c">// lib/auth.ts</span>
+const parsed = credentialsSchema.safeParse(credentials)</pre>
+    </div>
+
+    <div class="issue">
+      <div class="issue-head">
+        <span class="sev p1">P1</span>
+        <p class="issue-title"><span class="id">#8</span>登录页把演示账号密码写死在页面上</p>
+      </div>
+      <p class="loc"><span>位置</span> <b>app/login/page.tsx:37-39</b></p>
+      <p><span class="lbl">现象</span>页脚直接显示「演示账号：demo@example.com / demo1234」，代码里没有任何环境判断。种子脚本里也写死了同一个密码（<span class="inline">prisma/seed.ts:26</span>）。</p>
+      <p><span class="lbl">影响</span>只要按现状部署上线，任何人都能登录后台，看到所有访客的姓名、邮箱、备注。这是<strong>交付前必须处理</strong>的一条——不是「以后再说」。</p>
+      <p><span class="lbl">建议</span>用环境变量或构建期常量控制，生产构建里这段 JSX 直接不存在：</p>
+<pre>{process.env.NEXT_PUBLIC_SHOW_DEMO_HINT === '1' &amp;&amp; (
+  &lt;p&gt;演示账号：demo@example.com / demo1234&lt;/p&gt;
+)}</pre>
+    </div>
+
+    <div class="issue">
+      <div class="issue-head">
+        <span class="sev p1">P1</span>
+        <p class="issue-title"><span class="id">#9</span>引导式交互与真实时限不一致：UI 只给 14 天，后端放到 60 天</p>
+      </div>
+      <p class="loc"><span>位置</span> <b>lib/queries/booking-page.ts:8</b>（14 天）vs <b>lib/actions/booking.ts:15</b>（60 天）</p>
+      <p><span class="lbl">现象</span>公开页只生成未来 14 天的时段；<span class="inline">createBooking</span> 的校验上限是 60 天。两个数字各自硬编码，互不引用。</p>
+      <p><span class="lbl">影响</span>不算安全漏洞（时段本身仍然是合法的），但契约不一致：绕过 UI 直接提交第 45 天可以成功，从 UI 却永远看不到。将来只改一处，就会出现「列表里没有、但能约上」的幽灵时段。</p>
+      <p><span class="lbl">建议</span>把两个常量收进一个地方，后端上限必须 ≤ 前台展示范围，或者反过来由同一个配置派生。</p>
+    </div>
+  </section>
+
+  <!-- ============ 五、P2 ============ -->
+  <section id="p2">
+    <h2>五 · P2 · 可维护性与正确性 <span class="cnt">13 项</span></h2>
+
+    <h3 style="margin-top:0">A. 重复与死代码 —— 这是本项目最系统的问题</h3>
+
+    <div class="issue">
+      <div class="issue-head">
+        <span class="sev p2">P2</span>
+        <p class="issue-title"><span class="id">#10</span>六处死代码：抽象建好了，却没人用</p>
+      </div>
+      <p class="loc"><span>位置</span> <b>lib/queries/bookings.ts:38, 47</b> · <b>lib/queries/user.ts:16, 23</b> · <b>lib/actions/guard.ts:14</b> · <b>lib/utils/slots.ts:286</b> · <b>lib/utils/timezone.ts:148</b> · <b>lib/schemas/booking.ts:42, 53</b></p>
+      <table style="margin:8px 0 10px">
+        <tr><th>符号</th><th>引用</th><th>说明</th></tr>
+        <tr><td class="mono">getBookingsBySlot</td><td>仅定义</td><td>被 getBusyIntervals 取代</td></tr>
+        <tr><td class="mono">getBookingsInRange</td><td>仅定义</td><td>与 getBusyIntervals 的 where 条件几乎一样，重复实现</td></tr>
+        <tr><td class="mono">getUserById</td><td>仅定义</td><td>—</td></tr>
+        <tr><td class="mono">getUserByEmailForAuth</td><td>仅定义</td><td>lib/auth.ts 直接查 prisma，绕开了它</td></tr>
+        <tr><td class="mono">requireSession</td><td>仅定义</td><td>5 个页面各自手写 auth() + redirect</td></tr>
+        <tr><td class="mono">groupSlotsByDate</td><td>仅测试</td><td>生产用 BookingFlow 里的 groupByDay（另一份实现）</td></tr>
+        <tr><td class="mono">formatDateInTimeZone</td><td>仅测试</td><td>需要它的页面都自己写了 Intl</td></tr>
+        <tr><td class="mono">bookingQuerySchema / slotsQuerySchema</td><td>仅定义</td><td>分页和时段查询都没走 schema</td></tr>
+      </table>
+      <p><span class="lbl">影响</span>最讽刺的是 <span class="inline">groupSlotsByDate</span> 和 <span class="inline">formatDateInTimeZone</span>：<strong>有单测的版本没人用，在用的版本没单测</strong>。而 BookingFlow 里那份 groupByDay 正是 #3 水合问题的发生地。死代码不是「占地方」，是让人以为某件事已经做好了。</p>
+      <p><span class="lbl">建议</span>要么删，要么接。优先接：让 BookingFlow 用 lib 里的纯函数（它们本来就是同构的，能在客户端跑），顺手把水合问题一起解决。其余 4 个查询函数直接删。</p>
+    </div>
+
+    <div class="issue">
+      <div class="issue-head">
+        <span class="sev p2">P2</span>
+        <p class="issue-title"><span class="id">#11</span>时区格式化在五个地方各写一遍，且违反项目自己的约定 §6</p>
+      </div>
+      <p class="loc"><span>位置</span> <b>app/booking/[id]/page.tsx:14-34</b> · <b>app/dashboard/page.tsx:106-113</b> · <b>app/dashboard/bookings/page.tsx:57-65</b> · <b>components/booking/BookingFlow.tsx:34-61</b> · <b>lib/email/templates.ts:36-44</b></p>
+      <p><span class="lbl">现象</span>五份 <span class="inline">new Intl.DateTimeFormat(...)</span>，参数各写各的。CONVENTIONS.md 第 6 节明写「换算一律走 lib/utils/timezone.ts，禁止在组件里手写」，五个文件全部违反。更离谱的是 BookingFlow 里有三个几乎一样的工厂函数（weekdayFormatter / dateLabelFormatter / timeFormatter），却只给第一个加了缓存；而 <span class="inline">groupByDay</span> 又另用 <span class="inline">toLocaleDateString('en-CA')</span> 做第四种格式化。</p>
+      <p><span class="lbl">影响</span>改一次展示格式要动五个文件；已经有细微不一致（有的带星期、有的不带、有的 hour12:false 有的没有）。</p>
+      <p><span class="lbl">建议</span>在 timezone.ts 里补齐 2-3 个带缓存的格式化器，五个调用点全换过去。<b>顺带解决一个性能问题</b>：BookingFlow 第 182、186 行在 JSX 里直接调 <span class="inline">dateLabelFormatter()</span> / <span class="inline">timeFormatter()</span>，<strong>每次渲染都新建 Intl 对象</strong>，而 Intl 构造是出了名的慢。</p>
+    </div>
+
+    <div class="issue">
+      <div class="issue-head">
+        <span class="sev p2">P2</span>
+        <p class="issue-title"><span class="id">#12</span>关键业务参数硬编码在三处，互不知情</p>
+      </div>
+      <p class="loc"><span>位置</span> <b>lib/actions/booking.ts:14-15</b> · <b>lib/queries/booking-page.ts:64-65</b> · <b>lib/utils/slots.ts:57-58</b></p>
+      <table style="margin:8px 0 10px">
+        <tr><th>参数</th><th>出现次数</th><th>位置</th></tr>
+        <tr><td>提前量 60 分钟</td><td>3</td><td class="mono">LEAD_TIME_MINUTES / leadTimeMinutes: 60 / DEFAULT_LEAD_TIME</td></tr>
+        <tr><td>步进 15 分钟</td><td>2</td><td class="mono">slotIntervalMinutes: 15 / DEFAULT_SLOT_INTERVAL</td></tr>
+        <tr><td>可约天数</td><td>2 + 2 处文案</td><td class="mono">14 / 60 / 「未来 14 天」/「最近两周都约满了」</td></tr>
+        <tr><td>一天的毫秒数</td><td>5</td><td class="mono">86_400_000 / 24 * 3600_000 / MS_DAY</td></tr>
+      </table>
+      <p><span class="lbl">影响</span>「未来 14 天」这句话写死在 <span class="inline">app/[username]/[slug]/page.tsx:97</span>，空态文案「最近两周都约满了」写死在 <span class="inline">BookingFlow.tsx:147</span>。改 <span class="inline">BOOKING_WINDOW_DAYS</span> 就立刻说谎。更根本的是：这些本该是主理人可配的字段（schema 里没有 leadTime / slotInterval），现在只能改代码。</p>
+      <p><span class="lbl">建议</span>建 <span class="inline">lib/config/booking.ts</span> 集中导出，文案用模板拼接；中长期把 leadTime 和 slotInterval 加到 EventType 表（这是 v2 最该做的产品改动）。</p>
+    </div>
+
+    <div class="issue">
+      <div class="issue-head">
+        <span class="sev p2">P2</span>
+        <p class="issue-title"><span class="id">#13</span>isUniqueViolation 一模一样复制了两份</p>
+      </div>
+      <p class="loc"><span>位置</span> <b>lib/actions/booking.ts:17-24</b> · <b>lib/actions/event-type.ts:18-25</b></p>
+      <p><span class="lbl">现象</span>函数体逐字相同，连上面那段解释「为什么用鸭子类型」的注释都抄了一遍。</p>
+      <p><span class="lbl">影响</span>Prisma 换版本改错误结构时，要记得改两个地方；漏一个就会静默退化成「系统错误」。已实测当前 <span class="inline">code === 'P2002'</span> 判定是有效的，所以只是维护风险。</p>
+      <p><span class="lbl">建议</span>提到 <span class="inline">lib/actions/types.ts</span> 或 <span class="inline">lib/db/errors.ts</span>，两处 import。</p>
+    </div>
+
+    <div class="issue">
+      <div class="issue-head">
+        <span class="sev p2">P2</span>
+        <p class="issue-title"><span class="id">#14</span>鉴权样板在五个页面重复，而封装好的 requireSession 没人用</p>
+      </div>
+      <p class="loc"><span>位置</span> <b>app/dashboard/layout.tsx:10-13</b> · <b>page.tsx:14-15</b> · <b>bookings/page.tsx:41-42</b> · <b>event-types/page.tsx:10-11</b> · <b>availability/page.tsx:10-11</b></p>
+      <p><span class="lbl">现象</span>五个文件重复 <span class="inline">const session = await auth(); if (!session?.user) redirect('/login')</span>。而 layout 已经守住了所有子路由——<strong>四个子页面这层判断是纯冗余</strong>，每次导航多一次 auth() 调用。</p>
+      <p><span class="lbl">影响</span>CONVENTIONS.md §5 自己写着「鉴权由调用层或本函数内完成，二者选一，不许两处都做」，现在实际是 layout + page + action 三层都在做。</p>
+      <p><span class="lbl">建议</span>保留 layout 那一层（唯一必要的），子页面直接 <span class="inline">const { user } = await requireSession()</span>，把包装函数用起来。顺带能删掉 8 行重复代码。</p>
+    </div>
+
+    <div class="issue">
+      <div class="issue-head">
+        <span class="sev p2">P2</span>
+        <p class="issue-title"><span class="id">#15</span>七个营销区块各写一遍「小标题 + 大标题 + 导语」，没有共享组件</p>
+      </div>
+      <p class="loc"><span>位置</span> <b>components/sections/</b> 下 CapabilityGrid、CustomerStories、Faq、Hero、IntegrationWall、Principles、ProblemSolution</p>
+      <p><span class="lbl">现象</span>每个文件都有同一段结构：<span class="inline">p.text-micro</span> 装 eyebrow、<span class="inline">h2.text-section</span> 装标题、<span class="inline">p.text-body</span> 装导语，约 10 行 × 7 处。项目里没有 <span class="inline">SectionHeader</span> 这个组件。</p>
+      <p><span class="lbl">影响</span>调整区块标题的间距或字号，要改七个文件，很容易漏一个导致视觉不一致。已有轻微漂移：Faq 没有导语、IntegrationWall 的标题是数组所以要手动插 <span class="inline">&lt;br&gt;</span>。</p>
+      <p><span class="lbl">建议</span>抽一个 <span class="inline">&lt;SectionHeader eyebrow title lead /&gt;</span>，title 支持 string | [string, string]。七个文件各减 8-10 行。</p>
+    </div>
+
+    <h3>B. 正确性隐患</h3>
+
+    <div class="issue">
+      <div class="issue-head">
+        <span class="sev p2">P2</span>
+        <p class="issue-title"><span class="id">#16</span>日历附件折行按「字符数」算，RFC 5545 要求「字节数」</p>
+      </div>
+      <p class="loc"><span>位置</span> <b>lib/utils/ics.ts:17-30</b></p>
+      <p><span class="lbl">现象</span><span class="inline">if (line.length &lt;= 75) return line</span> —— <span class="inline">String.length</span> 是 UTF-16 码元数，RFC 规定每行不超过 75 <strong>octets</strong>。一行 25 个汉字 = 25 个 length、75 个字节，刚好卡在边界；再多一个字就超了但代码不会折行。</p>
+      <p><span class="lbl">影响</span>中文标题或备注偏长时，生成的 .ics 不符合规范。Outlook 和部分安卓日历客户端对超长行会截断或直接拒收，表现为「附件加不进日历」。</p>
+      <p><span class="lbl">建议</span>按 <span class="inline">Buffer.byteLength</span> 折行，且不能从多字节字符中间切断：</p>
+<pre>function foldLine(line: string): string {
+  const bytes = Buffer.from(line, 'utf8')
+  if (bytes.length &lt;= 75) return line
+  const out: string[] = []
+  let cur = ''
+  for (const ch of line) {
+    if (Buffer.byteLength(cur + ch, 'utf8') &gt; 75) { out.push(cur); cur = ch }
+    else cur += ch
+  }
+  out.push(cur)
+  return out.join('\r\n ')
+}</pre>
+    </div>
+
+    <div class="issue">
+      <div class="issue-head">
+        <span class="sev p2">P2</span>
+        <p class="issue-title"><span class="id">#17</span>邮件发送同步阻塞预约响应</p>
+      </div>
+      <p class="loc"><span>位置</span> <b>lib/actions/booking.ts:113-130</b></p>
+      <p><span class="lbl">现象</span><span class="inline">await sendBookingEmails(...)</span> 就在 action 里等着，两封邮件都发完才返回。Resend 的 API 往返通常 200-800ms，慢的时候更久。</p>
+      <p><span class="lbl">影响</span>访客点「确认预约」后要干等 1 秒以上才跳转，而这期间数据库早已写好——纯粹是在等第三方。已有 try/catch 兜底，说明作者知道邮件是次要的，那就更应该让它在响应之后跑。</p>
+      <p><span class="lbl">建议</span>Next 的 <span class="inline">after()</span> 正是为这个场景设计的：<span class="inline">after(() =&gt; sendBookingEmails(...))</span>，响应先返回，邮件后台发。</p>
+    </div>
+
+    <div class="issue">
+      <div class="issue-head">
+        <span class="sev p2">P2</span>
+        <p class="issue-title"><span class="id">#18</span>预约列表的分页页码不做上界约束</p>
+      </div>
+      <p class="loc"><span>位置</span> <b>app/dashboard/bookings/page.tsx:48</b></p>
+      <p><span class="lbl">现象</span><span class="inline">const page = Math.max(1, Number(params.page) || 1)</span> —— 只挡了下界。访问 <span class="inline">?page=999999</span> 会执行 <span class="inline">skip: 19999960</span>，查回空数组，而页脚显示「第 999999 / 1 页」。</p>
+      <p><span class="lbl">影响</span>大偏移量的 skip 在 PostgreSQL 上会全表扫，是个廉价 DoS 面；界面上还会显示自相矛盾的页码。</p>
+      <p><span class="lbl">建议</span>拿到 total 之后把 page 夹到 <span class="inline">[1, totalPages]</span>，超出就 redirect 到最后一页。</p>
+    </div>
+
+    <div class="issue">
+      <div class="issue-head">
+        <span class="sev p2">P2</span>
+        <p class="issue-title"><span class="id">#19</span>登录页声明了 error 参数却从不使用，登录失败时可能一片空白</p>
+      </div>
+      <p class="loc"><span>位置</span> <b>app/login/page.tsx:9, 16</b></p>
+      <p><span class="lbl">现象</span>类型里写了 <span class="inline">{ callbackUrl?: string; error?: string }</span>，实际只解构了 callbackUrl。Auth.js 在某些失败路径（session 过期、直连认证端点）会跳 <span class="inline">/login?error=...</span>，页面会安静地显示一个空表单。</p>
+      <p><span class="lbl">影响</span>用户不知道为什么被踢回登录页。配合 #7，两种完全不同的失败都表现为「什么都没说」。</p>
+      <p><span class="lbl">建议</span>把 error 映射成人话（CredentialsSignin → 邮箱或密码不对；SessionRequired → 请先登录），渲染在表单上方。</p>
+    </div>
+
+    <div class="issue">
+      <div class="issue-head">
+        <span class="sev p2">P2</span>
+        <p class="issue-title"><span class="id">#20</span>首页示意图的日期写死在代码里，已经自相矛盾</p>
+      </div>
+      <p class="loc"><span>位置</span> <b>components/sections/Hero.tsx:7-15</b></p>
+      <p><span class="lbl">现象</span></p>
+<pre>const days = [
+  { label: '明天', date: '11/10' },   <span class="bad">// 今天就是 11/10</span>
+  { label: '周三', date: '11/11' },   <span class="c">// 2026-11-11 确实是周三</span>
+  ...
+]</pre>
+      <p><span class="lbl">影响</span>这套日期是按 2026-11-10 排的，第一天就标错了（今天标成明天）；一个月后会整排过期。营销首屏的「产品截图」显示着不存在的日期，细心的访客会觉得假。</p>
+      <p><span class="lbl">建议</span>用 <span class="inline">new Date()</span> 现算（这是静态页，构建期算一次就够），或者干脆去掉具体日期只留星期。</p>
+    </div>
+
+    <div class="issue">
+      <div class="issue-head">
+        <span class="sev p2">P2</span>
+        <p class="issue-title"><span class="id">#21</span>两处架构约定被自己破例：页面直连 prisma、页面内联 server action</p>
+      </div>
+      <p class="loc"><span>位置</span> <b>app/dashboard/page.tsx:6, 21-39</b> · <b>app/dashboard/bookings/page.tsx:21-34</b></p>
+      <p><span class="lbl">现象</span>CONVENTIONS.md §2 规定 <span class="inline">lib/queries</span> 是唯一只读入口、<span class="inline">lib/actions</span> 是唯一写入口。实际：概览页直接 <span class="inline">import { prisma }</span> 写了 5 个查询；预约列表页在 page.tsx 里用 <span class="inline">'use server'</span> 定义了一个 <span class="inline">cancelFromForm</span>。</p>
+      <p><span class="lbl">影响</span>「第一参数永远是 userId」这条约定，在绕过查询层的地方就失效了。将来做缓存、审计、租户隔离时，这两处是漏网之鱼。</p>
+      <p><span class="lbl">建议</span>概览的 4 个 count 合并成 <span class="inline">getDashboardStats(userId)</span> 放进 queries（顺带把 4 次查询压成 2 次：一次 groupBy status、一次 count eventType）；cancelFromForm 挪回 actions/booking.ts。</p>
+    </div>
+
+    <div class="issue">
+      <div class="issue-head">
+        <span class="sev p2">P2</span>
+        <p class="issue-title"><span class="id">#22</span>CI 不跑单元测试</p>
+      </div>
+      <p class="loc"><span>位置</span> <b>.github/workflows/</b>（CI 配置）</p>
+      <p><span class="lbl">现象</span>CI 只有 typecheck → lint → build 三步，<strong>没有 <span class="inline">pnpm test</span></strong>。</p>
+      <p><span class="lbl">影响</span>README 拿「40 个单测覆盖」当质量背书，但 CI 不会因为它们变红而阻断合并。时段算法是唯一「算错不报错」的模块，恰恰最需要守住。</p>
+      <p><span class="lbl">建议</span>在 typecheck 后加一步 <span class="inline">run: pnpm test</span>，成本不到 1 秒（实测 450ms）。</p>
+    </div>
+  </section>
+
+  <!-- ============ 六、P3 ============ -->
+  <section id="p3">
+    <h2>六 · P3 · 属于「味道」，可以慢慢来 <span class="cnt">8 项</span></h2>
+
+    <div class="issue" style="padding:14px 18px">
+      <div class="issue-head" style="margin-bottom:6px">
+        <span class="sev p3">P3</span>
+        <p class="issue-title"><span class="id">#23</span>三个组件过长、职责过多</p>
+      </div>
+      <p class="loc"><span>位置</span> <b>EventTypeManager.tsx 317 行</b> · <b>BookingFlow.tsx 315 行</b> · <b>AvailabilityEditor.tsx 246 行</b></p>
+      <p><span class="lbl">影响</span>BookingFlow 一个组件里塞了三种视图（空态 / 填表 / 选时段），靠 <span class="inline">if (selectedSlot)</span> 和提前 return 切换。这类「一个组件三个页面」的结构，改任何一个视图都要读完整 315 行。<br><b>建议</b>按视图拆成 <span class="inline">SlotPicker</span> / <span class="inline">BookingForm</span> / <span class="inline">EmptyState</span>，父组件只留状态。</p>
+    </div>
+
+    <div class="issue" style="padding:14px 18px">
+      <div class="issue-head" style="margin-bottom:6px">
+        <span class="sev p3">P3</span>
+        <p class="issue-title"><span class="id">#24</span>最深处 13 层缩进</p>
+      </div>
+      <p class="loc"><span>位置</span> <b>AvailabilityEditor.tsx:188-226</b>（周一~周日 → 时间段 → 两个输入 + 删除按钮 → svg → path）</p>
+      <p><span class="lbl">影响</span>实测该项目最大缩进 13 层，就在这段。8 个文件超过 11 层。<br><b>建议</b>把「一个时间段行」抽成 <span class="inline">&lt;SegmentRow /&gt;</span>，缩进立刻降到 5 层，也让这段 39 行的 JSX 变成 8 行。同类问题：多个页面里重复的 <span class="inline">dt/dd</span> 键值行（<span class="inline">w-16 shrink-0 text-ink-muted</span> 出现 6 次）可以抽 <span class="inline">&lt;DetailRow /&gt;</span>。</p>
+    </div>
+
+    <div class="issue" style="padding:14px 18px">
+      <div class="issue-head" style="margin-bottom:6px">
+        <span class="sev p3">P3</span>
+        <p class="issue-title"><span class="id">#25</span>一条冗余索引</p>
+      </div>
+      <p class="loc"><span>位置</span> <b>prisma/schema.prisma:140-142</b></p>
+      <p><span class="lbl">现象</span><span class="inline">@@unique([eventTypeId, startTime])</span> 和 <span class="inline">@@index([eventTypeId, startTime])</span> 同时存在。唯一约束在 SQLite/PG 里本身就是 B-tree 索引，最左前缀完全相同。</p>
+      <p><span class="lbl">影响</span>白占一份写入开销和存储，对 SQLite 尤其无谓。<br><b>建议</b>删掉第 142 行。</p>
+    </div>
+
+    <div class="issue" style="padding:14px 18px">
+      <div class="issue-head" style="margin-bottom:6px">
+        <span class="sev p3">P3</span>
+        <p class="issue-title"><span class="id">#26</span>Booking.status 是无约束字符串</p>
+      </div>
+      <p class="loc"><span>位置</span> <b>prisma/schema.prisma:131</b>（注释写着 <span class="inline">confirmed | cancelled</span>）</p>
+      <p><span class="lbl">影响</span>SQLite 不支持 enum，这是合理妥协。但「合法值只有两个」这件事现在只写在注释里，任何 <span class="inline">update({ status: 'xxx' })</span> 都能写进去，之后所有按 status 过滤的逻辑都会静默漏数据。<br><b>建议</b>至少加一个 Zod 枚举在写入路径上做断言，或迁到 PG 时换原生 enum。</p>
+    </div>
+
+    <div class="issue" style="padding:14px 18px">
+      <div class="issue-head" style="margin-bottom:6px">
+        <span class="sev p3">P3</span>
+        <p class="issue-title"><span class="id">#27</span>代码违反了自己写的命名约定，说明文档已经落后于实现</p>
+      </div>
+      <p class="loc"><span>位置</span> <b>docs/CONVENTIONS.md</b> §2 §4 vs 实际代码</p>
+      <table style="margin:8px 0 0">
+        <tr><th>约定</th><th>实际</th></tr>
+        <tr><td>组件默认导出 <span class="mono">export default</span></td><td>全部是具名导出（更利于 tree-shaking，其实更好）</td></tr>
+        <tr><td>禁止用 <span class="mono">data</span> / <span class="mono">item</span> 作变量名</td><td><span class="mono">const data = await getBookableSlots()</span>、大量 <span class="mono">.map((item) =&gt;</span></td></tr>
+        <tr><td>常量示例 <span class="mono">MAX_BOOKING_DAYS_AHEAD</span></td><td>实际叫 <span class="mono">MAX_DAYS_AHEAD</span></td></tr>
+        <tr><td>目录 <span class="mono">components/marketing/</span></td><td>实际是 <span class="mono">components/sections/</span></td></tr>
+        <tr><td>技术栈表写 PostgreSQL</td><td>实际用 SQLite</td></tr>
+      </table>
+      <p style="margin-top:8px"><span class="lbl">影响</span>一份没人遵守的约定，比没有约定更糟——它会让下一个人不知道该信文档还是信代码。<br><b>建议</b>按现状订正文档（具名导出这条直接改约定，代码是对的）。</p>
+    </div>
+
+    <div class="issue" style="padding:14px 18px">
+      <div class="issue-head" style="margin-bottom:6px">
+        <span class="sev p3">P3</span>
+        <p class="issue-title"><span class="id">#28</span>零散的味道：一处 eslint 屏蔽、cn 不合并、设计系统页对外公开</p>
+      </div>
+      <p class="loc"><span>位置</span> <b>bookings/page.tsx:54</b> · <b>lib/utils/cn.ts</b> · <b>app/design-system/page.tsx</b></p>
+      <p style="margin-bottom:6px"><b>a.</b> <span class="inline">// eslint-disable-next-line react-hooks/purity</span> 屏蔽了 <span class="inline">Date.now()</span>。注释解释了原因，但屏蔽规则会顺带关掉这个函数里其他 purity 检查。更干净的做法是在 server component 顶部取一次时间再传下去。</p>
+      <p style="margin-bottom:6px"><b>b.</b> <span class="inline">cn()</span> 只做真值过滤、不做 Tailwind 冲突合并（注释说是有意为之）。后果是 <span class="inline">&lt;Button className="px-6"&gt;</span> 会同时产出 <span class="inline">px-3 px-6</span>，谁生效取决于样式表顺序而不是参数顺序。目前没踩到，但这是定时炸弹。</p>
+      <p><b>c.</b> <span class="inline">/design-system</span> 构建产物里是静态路由，生产环境可以公开访问。内部页面不该进生产，加个环境判断或直接排除。</p>
+    </div>
+  </section>
+
+  <!-- ============ 七、修复顺序 ============ -->
+  <section id="plan">
+    <h2>七 · 建议的修复顺序</h2>
+    <div class="card">
+      <ol class="plan">
+        <li><b>第一批（半天，先堵洞）</b> —— #1 双预约、#2 取消授权、#8 演示密码。三条都是「上线就出事」的级别，改动都很小。</li>
+        <li><b>第二批（一天，修用户能看到的错）</b> —— #3 水合、#5 弹窗陈旧值、#6 删除静默、#4 邮件误判、#7 登录契约。这五项修完，交互层面基本没有「点了没反应 / 显示错东西」的情况了。</li>
+        <li><b>第三批（一天，还债）</b> —— #10 死代码、#11 时区格式化收口、#12 常量集中、#13 去重、#14 鉴权收口。这一批不改变行为，但能让下一批改动快一倍。<b>注意 #10 和 #11 最好一起做</b>，因为接线时会牵到 BookingFlow。#3 也在那个文件里，可以合并成一次重构。</li>
+        <li><b>第四批（有空就做）</b> —— #16 ics 字节折行、#17 after() 异步发信、#21 查询层归位、#22 CI 加测试、#15 SectionHeader。</li>
+        <li><b>永远可以不做</b> —— #23~#28。这些是风格问题，不影响正确性。但 #27（文档漂移）建议顺手订正，成本只有几分钟。</li>
+      </ol>
+      <p style="margin:14px 0 0;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--ink2)">
+        <b>一句话：</b>前两批是「修 bug」，第三批是「修地基」。如果这个项目要交给别人维护，第三批不能省——死代码和五份重复的格式化函数，是新来的人最容易踩的坑。
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ 八、附录 ============ -->
+  <section id="appendix">
+    <h2>八 · 复查方法 <span class="cnt">结论怎么来的</span></h2>
+    <div class="card">
+      <p style="margin:0 0 10px;font-size:13px;color:var(--ink2)">所有结论都是跑出来或读出来的，没有一条靠猜。主要手段：</p>
+      <table>
+        <tr><th>手段</th><th>用于</th></tr>
+        <tr><td class="key">运行时验证</td><td>curl 跑通 13 条路由；cookie jar 走完整登录流程；检查 SSR HTML 里的实际文本</td></tr>
+        <tr><td class="key">质量门禁</td><td>vitest run（40/40）、tsc --noEmit、eslint .、next build 全跑一遍</td></tr>
+        <tr><td class="key">数据层探测</td><td>写临时脚本直接打 dev.db，验证 P2002 判定有效、并复现跨类型双预约（脚本已删除，dev.db 已还原）</td></tr>
+        <tr><td class="key">依赖源码核对</td><td>读 @auth/core 的 callback 实现确认 credentials 的来源；读 resend 的 .d.mts 确认 send 返回 {data,error} 而非抛错</td></tr>
+        <tr><td class="key">静态度量</td><td>wc -l 统计代码量；脚本计算各文件最大缩进层数；grep 统计符号引用次数找死代码</td></tr>
+        <tr><td class="key">对照自家约定</td><td>逐条比对 docs/CONVENTIONS.md 的 9 节规则与实际代码</td></tr>
+      </table>
+      <p style="margin:12px 0 0;font-size:12.5px;color:var(--muted)">
+        审查范围：app/ 全部 15 个路由文件、components/ 全部 22 个组件、lib/ 全部手写模块、prisma/schema.prisma 与 seed.ts、CI 配置、CONVENTIONS.md。未审查 lib/generated（Prisma 生成物，13321 行）。
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    预约系统 · 代码审查报告 · 2026-11-10 · 共 28 项（P0×1 / P1×8 / P2×13 / P3×8）
+  </footer>
+
+  </main>
+</div>
+</div>
+</body>
+</html>

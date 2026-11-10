@@ -82,9 +82,21 @@ export async function sendBookingEmails(data: BookingEmailData): Promise<{
     }),
   ])
 
-  const failures = results.filter((item) => item.status === 'rejected')
+  // resend 的 send() 在 API 报错时不 throw，而是把错误放在返回值里。
+  // 只看 rejected 会把「域名没验证 / 退信 / 配额超限」全当成成功。
+  const failures = results.filter(
+    (item) =>
+      item.status === 'rejected' ||
+      (item.status === 'fulfilled' && item.value.error !== null),
+  )
+
   if (failures.length > 0) {
-    console.error('[email] 部分邮件发送失败', failures)
+    console.error(
+      '[email] 部分邮件发送失败',
+      failures.map((item) =>
+        item.status === 'rejected' ? item.reason : item.value.error,
+      ),
+    )
     return { sent: false, reason: 'partial-failure' }
   }
 

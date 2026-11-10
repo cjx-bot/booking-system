@@ -136,8 +136,23 @@ model Booking {
   eventType EventType @relation(fields: [eventTypeId], references: [id], onDelete: Cascade)
   host      User      @relation(fields: [hostId], references: [id], onDelete: Cascade)
 
-  /// 防重复预约的唯一权威。应用层不做「先查后写」
-  @@unique([eventTypeId, startTime])
+  /// 防重复预约的权威在 BookingLock（hostId + startAt）。
+  /// 这里刻意**不加**唯一约束：取消是软删除（status='cancelled'），
+  /// 记录还在，唯一约束会让「取消后重新约同一时段」永久失败。
+  /// 索引保留，用于按时段查历史记录。
   @@index([hostId, startTime])
   @@index([eventTypeId, startTime])
+}
+
+/// 并发闸门：唯一性绑在「人 + 时刻」，不是「项目 + 时刻」。
+///
+/// 只有 Booking 上的 @@unique([eventTypeId, startTime]) 时，
+/// 同一个人在同一时刻可以被两个不同事件类型各约一次（P0）。
+/// 这张表与 Booking 在同一个事务里写，冲突时事务整体回滚。
+model BookingLock {
+  id      String   @id @default(cuid())
+  hostId  String
+  startAt DateTime
+
+  @@unique([hostId, startAt])
 }

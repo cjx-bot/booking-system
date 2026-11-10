@@ -52,3 +52,12 @@ export type Availability = Prisma.AvailabilityModel
  * 
  */
 export type Booking = Prisma.BookingModel
+/**
+ * Model BookingLock
+ * 并发闸门：唯一性绑在「人 + 时刻」，不是「项目 + 时刻」。
+ * 
+ * 只有 Booking 上的 @@unique([eventTypeId, startTime]) 时，
+ * 同一个人在同一时刻可以被两个不同事件类型各约一次（P0）。
+ * 这张表与 Booking 在同一个事务里写，冲突时事务整体回滚。
+ */
+export type BookingLock = Prisma.BookingLockModel

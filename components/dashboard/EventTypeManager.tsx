@@ -35,6 +35,8 @@ export function EventTypeManager({ items }: { items: EventTypeRow[] }) {
   const [editing, setEditing] = useState<EventTypeRow | null>(null)
   const [errors, setErrors] = useState<Record<string, string[]>>({})
   const [formError, setFormError] = useState<string | null>(null)
+  // 列表级错误：删除失败时弹窗是关着的，错误必须渲染在页面上
+  const [listError, setListError] = useState<string | null>(null)
 
   function openCreate() {
     setEditing(null)
@@ -87,13 +89,15 @@ export function EventTypeManager({ items }: { items: EventTypeRow[] }) {
     )
     if (!confirmed) return
 
+    setListError(null)
+
     startTransition(async () => {
       const result = await deleteEventType({ id: item.id })
       if (result.ok) {
         router.refresh()
         return
       }
-      setFormError(result.error)
+      setListError(result.error)
     })
   }
 
@@ -110,6 +114,15 @@ export function EventTypeManager({ items }: { items: EventTypeRow[] }) {
           新建
         </Button>
       </div>
+
+      {listError ? (
+        <div
+          role="alert"
+          className="rounded-field border border-danger-line bg-danger-soft px-3 py-2 text-[12.5px] text-danger"
+        >
+          {listError}
+        </div>
+      ) : null}
 
       {items.length === 0 ? (
         <div className="rounded-card border border-line bg-canvas p-10 text-center">
@@ -187,7 +200,14 @@ export function EventTypeManager({ items }: { items: EventTypeRow[] }) {
           </>
         }
       >
-        <form id="event-type-form" action={handleSubmit} className="space-y-4">
+        {/* key 让表单在切换编辑对象时重建：
+            Dialog 只切换 open，子元素始终挂载，非受控输入的 dirty 状态会串到下一个项目 */}
+        <form
+          key={editing?.id ?? 'new'}
+          id="event-type-form"
+          action={handleSubmit}
+          className="space-y-4"
+        >
           <div className="space-y-1.5">
             <Label htmlFor="title" required>
               标题
