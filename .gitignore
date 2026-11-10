@@ -27,3 +27,7 @@ next-env.d.ts
 *.db-journal
 *.db-wal
 *.db-shm
+
+# 项目自带的 Node 运行时（87MB，不进版本库）
+# 换机器时从 nodejs.org 下 v22 的 node.exe 放到 runtime/ 即可
+runtime/

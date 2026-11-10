@@ -12,10 +12,24 @@ pnpm dev
 
 打开 http://localhost:3000
 
-Windows 上也可以直接双击 **`启动预览.bat`**，会自动起服务并打开浏览器。
+Windows 上直接双击 **`启动预览.bat`**，会自动起服务并打开浏览器。
 
 **演示账号**：`demo@example.com` / `demo1234`
 **演示公开页**：http://localhost:3000/demo
+
+### 为什么项目里带了一个 node.exe
+
+`runtime/node.exe`（87MB）是项目自带的 Node 22 运行时，启动脚本只认它。
+
+原因：`better-sqlite3` 是原生模块，绑定 Node 的 ABI 版本。
+本项目依赖是按 **Node 22（ABI 127）** 装的，用系统里的 Node 24（ABI 137）启动会直接报
+`NODE_MODULE_VERSION 127 vs 137`，页面 500。
+
+所以：**不要用系统的 `pnpm dev` 启动**，那会挑到 Node 24。
+要么双击 `启动预览.bat`，要么显式用 `runtime\node.exe`。
+
+换机器时如果 `runtime/` 没了，从 nodejs.org 下 **v22** 的 Windows 版，把 `node.exe`
+放进 `runtime/` 即可（不要用 v24，会 ABI 不匹配）。
 
 ## 现在能做什么
 

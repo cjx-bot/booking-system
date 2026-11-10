@@ -1,27 +1,54 @@
 @echo off
 chcp 65001 >nul
-title 预约系统 - 本地预览
 cd /d "%~dp0"
+title 预约系统 - 本地预览
 
-echo ============================================
-echo    预约系统  本地预览
-echo ============================================
 echo.
-echo    启动后浏览器会自动打开：
+echo  ============================================
+echo    预约系统  本地预览
+echo  ============================================
+echo.
+echo    启动成功后浏览器会自动打开
 echo    http://localhost:3000
 echo.
 echo    关闭这个窗口 = 停止服务
-echo ============================================
 echo.
 
-where pnpm >nul 2>nul
-if errorlevel 1 (
-  echo [错误] 没找到 pnpm。
-  echo 请先在命令行执行：npm install -g pnpm
+if not exist "runtime\node.exe" (
+  echo   [错误] 项目文件不完整：找不到 runtime\node.exe
+  echo   请重新获取完整项目目录。
   echo.
   pause
   exit /b 1
 )
 
-start "" cmd /c "timeout /t 12 >nul & start http://localhost:3000"
-call pnpm dev
+if not exist "node_modules\next\dist\bin\next" (
+  echo   [错误] 依赖没有安装：找不到 node_modules
+  echo   请在项目目录执行 pnpm install
+  echo.
+  pause
+  exit /b 1
+)
+
+if not exist ".env" (
+  echo   [提示] 缺少 .env，正在从 .env.example 生成
+  copy ".env.example" ".env" >nul
+)
+
+netstat -ano ^| findstr ":3000 " ^| findstr "LISTENING" >nul 2>nul
+if not errorlevel 1 (
+  echo   [提示] 3000 端口已被占用
+  echo   可能是上次的窗口没关干净，先关掉再试
+  echo.
+)
+
+echo  正在启动，首次启动要编译，稍等几秒
+echo.
+
+start "" powershell -NoProfile -WindowStyle Hidden -Command "Start-Sleep -Seconds 8; Start-Process 'http://localhost:3000'"
+
+"%~dp0runtime\node.exe" "node_modules\next\dist\bin\next" dev --port 3000
+
+echo.
+echo  服务已停止
+pause
