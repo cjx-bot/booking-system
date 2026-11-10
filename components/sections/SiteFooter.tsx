@@ -2,7 +2,22 @@ import Link from 'next/link'
 import { Container } from '@/components/ui/Container'
 import { FOOTER_COLUMNS, FOOTER_NOTE } from '@/lib/content/home'
 
-export function SiteFooter() {
+type FooterColumn = {
+  title: string
+  links: ReadonlyArray<{ label: string; href: string }>
+}
+
+type Props = {
+  columns?: ReadonlyArray<FooterColumn>
+  tagline?: string
+  note?: string
+}
+
+export function SiteFooter({
+  columns = FOOTER_COLUMNS,
+  tagline = '一个人也够用的排期工具。发链接，客户自己挑时间。',
+  note = FOOTER_NOTE,
+}: Props) {
   return (
     <footer className="border-t border-line bg-canvas py-10">
       <Container>
@@ -12,11 +27,11 @@ export function SiteFooter() {
               预约系统
             </p>
             <p className="text-small mt-2 max-w-[26ch] text-ink-muted">
-              一个人也够用的排期工具。发链接，客户自己挑时间。
+              {tagline}
             </p>
           </div>
 
-          {FOOTER_COLUMNS.map((column) => (
+          {columns.map((column) => (
             <nav key={column.title} aria-label={column.title}>
               <p className="text-[11.5px] mb-2.5 font-medium text-ink-muted">
                 {column.title}
@@ -38,7 +53,7 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-8 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-5">
-          <p className="text-[11.5px] text-ink-muted">{FOOTER_NOTE}</p>
+          <p className="text-[11.5px] text-ink-muted">{note}</p>
           <p className="text-[11.5px] text-ink-muted">
             © {new Date().getFullYear()} 保留所有权利
           </p>
