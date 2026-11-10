@@ -9,6 +9,7 @@ export const NAV_ITEMS = [
   { label: '怎么用', href: '#how' },
   { label: '能力', href: '#capabilities' },
   { label: '谁在用', href: '#stories' },
+  { label: '企业版', href: '/enterprise' },
   { label: '常见问题', href: '#faq' },
   { label: '定价', href: '/pricing' },
 ] as const
@@ -238,6 +239,7 @@ export const FOOTER_COLUMNS = [
     links: [
       { label: '怎么用', href: '#how' },
       { label: '能力', href: '#capabilities' },
+      { label: '企业版', href: '/enterprise' },
       { label: '定价', href: '/pricing' },
     ],
   },

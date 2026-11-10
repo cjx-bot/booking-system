@@ -38,8 +38,16 @@ if not exist ".env" (
 netstat -ano ^| findstr ":3000 " ^| findstr "LISTENING" >nul 2>nul
 if not errorlevel 1 (
   echo   [提示] 3000 端口已被占用
-  echo   可能是上次的窗口没关干净，先关掉再试
   echo.
+  echo   多半是预约系统已经在跑了。
+  echo   先看看浏览器能不能打开 http://localhost:3000
+  echo   能打开就直接用，不用再双击这个文件。
+  echo.
+  echo   如果打不开，说明上次的窗口没关干净：
+  echo   关掉那个黑窗口，再双击本文件。
+  echo.
+  pause
+  exit /b 1
 )
 
 echo  正在启动，首次启动要编译，稍等几秒
