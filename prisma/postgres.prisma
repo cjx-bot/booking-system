@@ -1,0 +1,159 @@
+// Prisma 7 · PostgreSQL —— 生产构建专用。
+// 由 DATABASE_PROVIDER=postgres 切换（见 prisma.config.ts）。
+// 内容必须与 schema.prisma 保持一致，只有 provider 不同。改模型时两个文件一起改。
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// 认证（Auth.js v5 + Prisma Adapter 标准结构，字段名不要改）
+// ============================================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  username  String   @unique
+  name      String?
+  timezone  String   @default("Asia/Shanghai")
+  image     String?
+  // Credentials 登录用；换成 OAuth 时置空即可，不影响其他表
+  password  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accounts     Account[]
+  sessions     Session[]
+  eventTypes   EventType[]
+  availability Availability[]
+  bookings     Booking[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ============================================================
+// 业务
+// ============================================================
+
+model EventType {
+  id           String  @id @default(cuid())
+  userId       String
+  title        String
+  slug         String
+  description  String?
+  /// 分钟。整数，不允许小数
+  duration     Int
+  /// 前缓冲：两场之间必须留出的空隙（分钟）
+  bufferBefore Int     @default(0)
+  bufferAfter  Int     @default(0)
+  isActive     Boolean @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+
+  /// 同一个主理人名下 slug 唯一；不同主理人可以同名
+  @@unique([userId, slug])
+  @@index([userId])
+}
+
+model Availability {
+  id      String @id @default(cuid())
+  userId  String
+  /// 0 = 周日 … 6 = 周六
+  weekday Int
+  /// 从当天 00:00 起的分钟数，540 = 09:00
+  startMinute Int
+  endMinute   Int
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, weekday])
+}
+
+model Booking {
+  id          String @id @default(cuid())
+  eventTypeId String
+  hostId      String
+
+  guestName     String
+  guestEmail    String
+  /// IANA 时区名，如 America/New_York。禁止存 +08:00 这种偏移量
+  guestTimezone String
+
+  /// 一律 UTC
+  startTime DateTime
+  endTime   DateTime
+
+  /// confirmed | cancelled
+  status String @default("confirmed")
+  notes  String?
+
+  createdAt DateTime @default(now())
+
+  eventType EventType @relation(fields: [eventTypeId], references: [id], onDelete: Cascade)
+  host      User      @relation(fields: [hostId], references: [id], onDelete: Cascade)
+
+  /// 防重复预约的权威在 BookingLock（hostId + startAt）。
+  /// 这里刻意**不加**唯一约束：取消是软删除（status='cancelled'），
+  /// 记录还在，唯一约束会让「取消后重新约同一时段」永久失败。
+  /// 索引保留，用于按时段查历史记录。
+  @@index([hostId, startTime])
+  @@index([eventTypeId, startTime])
+}
+
+/// 并发闸门：唯一性绑在「人 + 时刻」，不是「项目 + 时刻」。
+///
+/// 只有 Booking 上的 @@unique([eventTypeId, startTime]) 时，
+/// 同一个人在同一时刻可以被两个不同事件类型各约一次（P0）。
+/// 这张表与 Booking 在同一个事务里写，冲突时事务整体回滚。
+model BookingLock {
+  id      String   @id @default(cuid())
+  hostId  String
+  startAt DateTime
+
+  @@unique([hostId, startAt])
+}

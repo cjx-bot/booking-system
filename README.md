@@ -74,16 +74,38 @@ Vitest 4（40 个单测）
 
 `package.json` 里已锁死，不要改成 `^`。
 
-## 从 SQLite 换到 PostgreSQL
+## 部署到 Netlify
 
-产品要上线时的三步：
+**为什么不能直接部署**：Netlify 的函数文件系统只读、不持久，SQLite 文件存不住。
+所以生产必须走 Postgres，本地继续用 SQLite（双击即用不能丢）。
 
-1. `pnpm add @prisma/adapter-pg`，`pnpm remove @prisma/adapter-better-sqlite3 better-sqlite3`
-2. `prisma/schema.prisma` 里 `provider = "sqlite"` 改成 `"postgresql"`
-3. `lib/db/index.ts` 把 `PrismaBetterSqlite3` 换成 `PrismaPg`，`DATABASE_URL` 换成 PG 连接串
+已接好双 schema：
 
-然后删掉 `prisma/migrations/` 重新 `pnpm db:migrate`。
-业务代码、查询、action 一行都不用改。
+| 环境 | schema 文件 | provider | 切换方式 |
+|---|---|---|---|
+| 本地 | `prisma/schema.prisma` | sqlite | 默认 |
+| 生产 | `prisma/postgres.prisma` | postgresql | `DATABASE_PROVIDER=postgres` |
+
+两份 schema 内容必须一致，**改模型时两个文件一起改**。
+`lib/db/index.ts` 按 `DATABASE_URL` 前缀自动选 adapter，不用改代码。
+
+部署步骤：
+
+1. Netlify 导入本仓库，构建配置读 `netlify.toml`（先 generate、再 db push、最后 build）
+2. 创建数据库（Netlify DB 或任意 Postgres），拿到连接串
+3. 设置环境变量：
+
+   | 变量 | 值 |
+   |---|---|
+   | `DATABASE_URL` | `postgres://...`（Netlify DB 里复制） |
+   | `AUTH_SECRET` | 随机 32 位以上字符串 |
+   | `NEXT_PUBLIC_APP_URL` | 部署后的域名，如 `https://xxx.netlify.app` |
+   | `NEXT_PUBLIC_SHOW_DEMO_HINT` | **留空**（生产不能印出可用账号） |
+
+4. 首次部署后跑一次种子：`DATABASE_PROVIDER=postgres DATABASE_URL=... pnpm db:seed`
+
+`lib/generated/` 不进版本库——本地按 SQLite 生成、Netlify 按 Postgres 生成，
+两边产物不能共用。clone 下来先跑一次 `pnpm db:generate`。
 
 ## 目录
 

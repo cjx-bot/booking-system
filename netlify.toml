@@ -1,0 +1,10 @@
+[build]
+  # 先按 postgres schema 生成 client，再把表同步到数据库，最后构建
+  command = "npx prisma generate && npx prisma db push --skip-generate && next build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  # 让 prisma.config.ts 选 prisma/postgres.prisma
+  DATABASE_PROVIDER = "postgres"
+  NEXT_TELEMETRY_DISABLED = "1"

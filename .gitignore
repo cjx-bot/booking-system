@@ -31,3 +31,7 @@ next-env.d.ts
 # 项目自带的 Node 运行时（87MB，不进版本库）
 # 换机器时从 nodejs.org 下 v22 的 node.exe 放到 runtime/ 即可
 runtime/
+
+# Prisma 生成的 client
+# 本地按 SQLite 生成、Netlify 按 Postgres 生成，两边产物不能共用，所以不进版本库
+lib/generated/
