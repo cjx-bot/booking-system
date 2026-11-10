@@ -13,9 +13,18 @@ export async function getUserByUsername(username: string) {
   })
 }
 
-export async function getUserById(id: string) {
+/** 后台设置页用：不带 password，避免哈希被传到客户端组件 */
+export async function getUserProfile(id: string) {
   return prisma.user.findUnique({
     where: { id },
+    select: {
+      id: true,
+      email: true,
+      username: true,
+      name: true,
+      timezone: true,
+      createdAt: true,
+    },
   })
 }
 

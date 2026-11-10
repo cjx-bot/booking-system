@@ -9,6 +9,7 @@ const items = [
   { href: '/dashboard/event-types', label: '事件类型' },
   { href: '/dashboard/availability', label: '可用时间' },
   { href: '/dashboard/bookings', label: '预约列表' },
+  { href: '/dashboard/settings', label: '账号设置' },
 ] as const
 
 export function DashboardNav() {

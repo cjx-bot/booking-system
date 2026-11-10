@@ -58,11 +58,12 @@ async function main() {
 
   const user = await prisma.user.upsert({
     where: { email: DEMO.email },
+    // 刻意不更新 password：种子可以重复跑，但不该把用户改过的密码重置回去。
+    // 忘记密码时用后台「账号设置」改，或直接改库。
     update: {
       username: DEMO.username,
       name: DEMO.name,
       timezone: DEMO.timezone,
-      password: passwordHash,
     },
     create: {
       email: DEMO.email,
