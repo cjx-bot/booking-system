@@ -56,6 +56,39 @@
   /* 阴影：只有两级，够用就好 */
   --shadow-card: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.06);
   --shadow-pop: 0 8px 24px rgb(16 24 40 / 0.1), 0 2px 6px rgb(16 24 40 / 0.06);
+
+  /* ---------- 字号阶梯 ----------
+     用 clamp() 而不是 sm:/lg: 断点覆盖：一个类同时管三档，
+     组件里就不需要再写 text-[34px] sm:text-[44px] 这种硬编码。
+     取值参考 cal.com 的版式节奏，按中文的视觉重量下调约 8%。 */
+  --text-hero: clamp(32px, 4.6vw, 52px);
+  --text-hero--line-height: 1.14;
+  --text-hero--letter-spacing: -0.028em;
+  --text-hero--font-weight: 620;
+
+  --text-section: clamp(25px, 2.9vw, 34px);
+  --text-section--line-height: 1.24;
+  --text-section--letter-spacing: -0.02em;
+  --text-section--font-weight: 600;
+
+  --text-lead: clamp(15px, 1.25vw, 17px);
+  --text-lead--line-height: 1.7;
+  --text-lead--letter-spacing: 0;
+
+  --text-card: 16px;
+  --text-card--line-height: 1.4;
+  --text-card--letter-spacing: -0.01em;
+  --text-card--font-weight: 600;
+
+  --text-body: 14.5px;
+  --text-body--line-height: 1.7;
+
+  --text-small: 13px;
+  --text-small--line-height: 1.62;
+
+  --text-micro: 11.5px;
+  --text-micro--line-height: 1.5;
+  --text-micro--letter-spacing: 0.04em;
 }
 
 /* ============================================================
@@ -92,6 +125,17 @@
   /* 数字等宽，避免时段列表跳动 */
   .tnum {
     font-variant-numeric: tabular-nums;
+  }
+
+  /*
+   * 中文标题的断行控制。
+   * 默认断行会把「十一封邮件」拆成「十一封」+「邮件」，
+   * 末行只剩两个字，视觉上很跳。balance 让各行长度接近。
+   * 手写 <br> 的标题不受影响。
+   */
+  h1,
+  h2 {
+    text-wrap: balance;
   }
 }
 
