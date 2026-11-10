@@ -1,6 +1,7 @@
 [build]
-  # 先按 postgres schema 生成 client，再把表同步到数据库，最后构建
-  command = "npx prisma generate && npx prisma db push --skip-generate && next build"
+  # 数据库接上之前先只构建；接上后把 db push 加回这里：
+  #   export DATABASE_URL="${DATABASE_URL:-$NETLIFY_DATABASE_URL}" && npx prisma db push --skip-generate
+  command = "npx prisma generate && next build"
   publish = ".next"
 
 [build.environment]

@@ -35,3 +35,6 @@ runtime/
 # Prisma 生成的 client
 # 本地按 SQLite 生成、Netlify 按 Postgres 生成，两边产物不能共用，所以不进版本库
 lib/generated/
+
+# Local Netlify folder
+.netlify
