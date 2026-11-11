@@ -10,6 +10,16 @@ import { defineConfig, env } from 'prisma/config'
  */
 const usePostgres = process.env.DATABASE_PROVIDER === 'postgres'
 
+/**
+ * 连接串优先级与 lib/db/index.ts 保持一致：
+ * Netlify 注入的 NETLIFY_DB_URL（owner，可写）优先，其次本地 .env 的 DATABASE_URL。
+ * 顺序反了，构建期的 db push 会打到本地 SQLite 上。
+ */
+const databaseUrl =
+  process.env.NETLIFY_DB_URL ??
+  process.env.DATABASE_URL ??
+  process.env.NETLIFY_DATABASE_URL
+
 export default defineConfig({
   schema: usePostgres ? 'prisma/postgres.prisma' : 'prisma/schema.prisma',
   migrations: {
@@ -17,6 +27,7 @@ export default defineConfig({
     seed: 'tsx prisma/seed.ts',
   },
   datasource: {
-    url: env('DATABASE_URL'),
+    // 本地只跑 generate 时可以没有连接串
+    url: databaseUrl ?? env('DATABASE_URL'),
   },
 })

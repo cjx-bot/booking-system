@@ -15,9 +15,17 @@ import { PrismaClient } from '@/lib/generated/prisma/client'
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient }
 
 function createClient(): PrismaClient {
-  // Netlify Database 注入的是 NETLIFY_DATABASE_URL，本地上限用 DATABASE_URL。
-  // 两个都读，省得在平台上再手工映射一次变量名。
-  const url = process.env.DATABASE_URL ?? process.env.NETLIFY_DATABASE_URL
+  // 优先级：
+  //   1. NETLIFY_DB_URL —— Netlify 运行时注入的 owner 连接串（可写），只有生产才有
+  //   2. DATABASE_URL   —— 本地 .env 里的 file:./dev.db
+  //   3. NETLIFY_DATABASE_URL —— 另一个可能的注入名，留着兜底
+  //
+  // 顺序不能反：本地构建时 .env 会跟着打包进去，DATABASE_URL 会被污染成 file:，
+  // 如果让它优先，生产就跑在 SQLite 上，所有数据库页面 500。
+  const url =
+    process.env.NETLIFY_DB_URL ??
+    process.env.DATABASE_URL ??
+    process.env.NETLIFY_DATABASE_URL
   if (!url) {
     throw new Error(
       '缺少环境变量 DATABASE_URL。复制 .env.example 为 .env 后重试。',
@@ -43,9 +51,25 @@ function createClient(): PrismaClient {
   })
 }
 
-// 开发期热更新会反复执行模块顶层代码，不缓存会耗尽连接
-export const prisma = globalForPrisma.prisma ?? createClient()
-
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma
+function getClient(): PrismaClient {
+  if (!globalForPrisma.prisma) {
+    globalForPrisma.prisma = createClient()
+  }
+  return globalForPrisma.prisma
 }
+
+/**
+ * 懒初始化。
+ *
+ * 不能写成 `export const prisma = createClient()`——`next build` 收集页面数据时
+ * 会 import 本模块，那一瞬间就会尝试建连接。构建机没有真实数据库，
+ * 会直接让整个构建失败（而且报的是「adapter 与 provider 不匹配」这种误导读法）。
+ * 包一层 Proxy，只有真正调用 prisma.xxx 时才创建。
+ */
+export const prisma = new Proxy({} as PrismaClient, {
+  get(_target, prop) {
+    const client = getClient()
+    const value = Reflect.get(client, prop as string, client)
+    return typeof value === 'function' ? value.bind(client) : value
+  },
+})

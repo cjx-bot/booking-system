@@ -44,10 +44,16 @@ importers:
       resend:
         specifier: 6.37.0
         version: 6.37.0
+      styled-jsx:
+        specifier: 5.1.6
+        version: 5.1.6(@babel/core@7.29.13)(react@19.3.1)
       zod:
         specifier: 4.6.7
         version: 4.6.7
     devDependencies:
+      '@netlify/plugin-nextjs':
+        specifier: 5.16.6
+        version: 5.16.6
       '@tailwindcss/postcss':
         specifier: 4.3.5
         version: 4.3.5
@@ -762,6 +768,10 @@ packages:
 
   '@keyv/serialize@1.1.1':
     resolution: {integrity: sha512-dXn3FZhPv0US+7dtJsIi2R+c7qWYiReoEh5zUntWCf4oSpMNib8FDhSoed6m3QyZdx5hK7iLFkYk3rNxwt8vTA==}
+
+  '@netlify/plugin-nextjs@5.16.6':
+    resolution: {integrity: sha512-BXy5WhogsaQOKz+C+KMlWrQupdGkV1a6TmJ6RLF6RwUMz6Oi419RejMD8yB8ttBKqImQDkOE4MmNLx3uEEKxPw==}
+    engines: {node: '>=18.0.0'}
 
   '@next/env@16.4.5':
     resolution: {integrity: sha512-JwSPwpdkZL5VMl2jA/q+JI8MZdweAL3xmw5/tb9y/TLtmS0YXZnmYDzSihwk8xTj1OL+WM53gTqaj96yuLp6Xw==}
@@ -3861,6 +3871,8 @@ snapshots:
       keyv: 5.6.0
 
   '@keyv/serialize@1.1.1': {}
+
+  '@netlify/plugin-nextjs@5.16.6': {}
 
   '@next/env@16.4.5': {}
 

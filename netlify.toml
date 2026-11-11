@@ -1,7 +1,8 @@
 [build]
-  # 数据库接上之前先只构建；接上后把 db push 加回这里：
-  #   export DATABASE_URL="${DATABASE_URL:-$NETLIFY_DATABASE_URL}" && npx prisma db push --skip-generate
-  command = "npx prisma generate && next build"
+  # 1. 按 postgres schema 生成 client
+  # 2. 把表结构同步到 Netlify 注入的数据库（拿不到连接串时跳过，不影响本地）
+  # 3. 构建 Next
+  command = "npx prisma generate && (npx prisma db push --accept-data-loss || echo '跳过建表：没有可用的数据库连接串') && next build"
   publish = ".next"
 
 [build.environment]
@@ -9,4 +10,3 @@
   # 让 prisma.config.ts 选 prisma/postgres.prisma
   DATABASE_PROVIDER = "postgres"
   NEXT_TELEMETRY_DISABLED = "1"
-
