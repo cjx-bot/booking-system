@@ -25,6 +25,13 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
+      # lib/generated 不进版本库（本地按 SQLite 生成、线上按 Postgres 生成，产物不能共用），
+      # 所以 CI 必须先自己生成一次，否则 tsc 会因为找不到 PrismaClient 报一串 implicitly any。
+      - name: Prisma generate
+        run: pnpm db:generate
+        env:
+          DATABASE_URL: file:./dev.db
+
       - name: Typecheck
         run: pnpm typecheck
 
